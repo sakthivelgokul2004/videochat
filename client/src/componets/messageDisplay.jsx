@@ -8,16 +8,12 @@ import { Outlet, Link } from "react-router-dom";
 export default function Message() {
   const [currMessage, setCurrMessage] = useState("");
   const [messages, setMessage] = useState([])
-  const dispatch = useDispatch();
   const socket = useSelector((state) => state.Socket.socket);
   useEffect(() => {
     socket.on("newMesage", (val) => setMessage((prevs) => [...prevs, val]))
-
-
   }, [])
 
   const handleMessage = (event) => {
-    console.log(event.target.value);
     setCurrMessage(() => event.target.value);
   };
 
@@ -30,22 +26,21 @@ export default function Message() {
   let style ="text-success bg-"
 
   return (
-    <div>
+    <div className="flex flex-col justify-end w-screen overflow-hidden">
       {(messages.length) ? messages.map((Message) => {
         return <p key={Message}>{Message}</p>
       }) : ""}
-      {messages && messages.forEach((val) => <p className={style+"bg-warning"}>{val}</p>)}
-      <input
+      <input 
         type="text"
         placeholder="Type here"
-        className="input input-bordered input-accent w-full max-w-xs"
+        className="input input-bordered input-accent w-full m-8 "
         onChange={handleMessage}
         onKeyUp={onEnter}
         value={currMessage}
       />
-      <button onClick={signWithGoogle}>notufoeU</button>
+      {/* <button onClick={signWithGoogle}>notufoeU</button>
       <button onClick={addUser}>userdetail</button>
-      <Link to="/VideoChat">Blogs</Link>
+      <Link to="/VideoChat">Blogs</Link> */}
 
     </div>
   );

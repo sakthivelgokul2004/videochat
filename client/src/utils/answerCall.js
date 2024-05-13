@@ -1,21 +1,22 @@
-import { collection, addDoc } from "firebase/firestore"; 
+import { collection, addDoc, updateDoc, onSnapshot,doc,getDoc } from "firebase/firestore"; 
 import { db } from "../../firebase.config";
 // 3. Answer the call with the unique ID
  
  export default  async function answerCall (pc,callInput)  {
 
-  const callId = callInput.value;
-  const callDoc = collection(db,'calls').doc(callId);
-  const answerCandidates = callDoc.collection('answerCandidates');
-  const offerCandidates = callDoc.collection('offerCandidates');
-
+  const callsCollection=collection(db, 'calls');
+  const callId = callInput;
+  const callDoc = doc(callsCollection,callId)
+  const offerCandidates = collection(callDoc,'offerCandidates');
+  const answerCandidates = collection(callDoc,'answerCandidates');
   pc.onicecandidate = (event) => {
-    event.candidate && answerCandidates.add(event.candidate.toJSON());
+    event.candidate && addDoc(answerCandidates,event.candidate.toJSON());
   };
 
-  const callData = (await callDoc.get()).data();
-
-  const offerDescription = callData.offer;
+  const getData = await getDoc(callDoc)
+  let  calldata=getData.data()
+  const offerDescription = calldata.offer;
+  console.log(offerDescription,callId)
   await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
 
   const answerDescription = await pc.createAnswer();
@@ -25,10 +26,10 @@ import { db } from "../../firebase.config";
     type: answerDescription.type,
     sdp: answerDescription.sdp,
   };
+ await updateDoc(callDoc,{answer})
 
-  await callDoc.update({ answer });
+ onSnapshot(offerCandidates,(snapshot)=>{
 
-  offerCandidates.onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
       console.log(change);
       if (change.type === 'added') {
@@ -36,5 +37,6 @@ import { db } from "../../firebase.config";
         pc.addIceCandidate(new RTCIceCandidate(data));
       }
     });
-  });
+})
+// return pc
 };

@@ -1,15 +1,11 @@
+
 import { collection, addDoc,doc ,setDoc,onSnapshot} from "firebase/firestore"; 
 import { db } from "../../firebase.config";
 import 'firebase/firestore';
-import { useEffect, useState } from "react";
-import { usePeerContex } from "../componets/contex/peerContex";
+export default async function createOffer(pc){
 
-export default  function useCreateCall()  {
-  const pc=usePeerContex()
-  // Reference Firestore collections for signaling
-async function createOffer(){
-
-const callDoc =  doc(db, 'calls','user');
+  const callsCollection=collection(db, 'calls');
+const callDoc = doc(callsCollection) 
   const offerCandidates = collection(callDoc,'offerCandidates');
   const answerCandidates = collection(callDoc,'answerCandidates');
 
@@ -17,6 +13,7 @@ const callDoc =  doc(db, 'calls','user');
 
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
+    console.log("candidate");
     event.candidate && addDoc( offerCandidates,event.candidate.toJSON());
   };
 
@@ -51,7 +48,3 @@ const callDoc =  doc(db, 'calls','user');
   });
 return callDoc.id
 }
-createOffer()
-  // hangupButton.disabled = false;
-  return [id]
-};

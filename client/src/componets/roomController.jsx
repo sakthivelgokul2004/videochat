@@ -9,10 +9,14 @@ export default function Room() {
   }
   return (
     <div className="w-1/4 h-screen flex flex-col items-end ">
-      <div className="flex-grow w-full">
-        <button onClick={createRoom}> new meeting</button>
-        <p>rooms</p>
-      </div>
-    </div>
+
+  <div className="w-full h-screen">
+    <label htmlFor="my-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
+    <ul className="menu p-4 w-60 h-full bg-base-200 text-base-content ">
+      <li><a>Sidebar Item 1</a></li>
+      <li><a>Sidebar Item 2</a></li>
+    </ul>
+  </div>
+</div>
   );
 }

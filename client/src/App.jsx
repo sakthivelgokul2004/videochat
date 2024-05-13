@@ -11,9 +11,9 @@ function App() {
    <PeerProvider>
       <div className="h-screen w-screen">
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-        <Route path="VideoChat" element={<VideoChat/>} />
+          <Routes path="/">
+            <Route index path="*" element={<Home />} />
+            <Route path="VideoChat" element={<VideoChat/>} />
           </Routes>
         </BrowserRouter>
       </div>

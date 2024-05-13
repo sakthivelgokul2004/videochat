@@ -1,36 +1,35 @@
-import getUserMedia from "../utils/getUserMedia.js"
-import useCreateCall from "../hooks/CreateOffer.jsx"
-import answerCall from "../utils/answerCall.js";
 import VideoContainer from "../componets/videoContainer.jsx";
-import { PeerProvider, useStreamStateContex,useStremUpateContex } from "../componets/contex/peerContex.jsx";
-import Input from "../componets/inputEment.jsx";
-import { useRef } from "react";
+import {  usePeerContex, useStreamStateContex,useStremUpateContex } from "../componets/contex/peerContex.jsx";
+import { useRef, useState } from "react";
+import  createOffer  from "../hooks/CreateOffer.jsx";
+import answerCall from "../utils/answerCall.js";
 
 export default  function VideoChat() {
+  const [id,setId]=useState()
+const pc=usePeerContex()
 const inputref=useRef()
-  
+  // console.log(inputref.current.value)
 const SteamState=useStreamStateContex()
 const updateSteamState=useStremUpateContex()
-function createCall(){
-  let [id]=useCreateCall()
-  // inputref.current.value=id
+async function createCall(pc){
+  let rid=(await createOffer(pc))
+  await setId((prev)=>rid)
+  console.log(id)
+  inputref.current.value=id
 }
   return (
- 
     <div className=" h-full w-full flex flex-col">
-      <div className="videoDisplay flex-grow">
-        {SteamState && <VideoContainer  />}
+      <div className="videoDisplay flex-grow h-auto w-auto">
+        {SteamState && <VideoContainer />}
       </div>
-      <div className="bottom bottom-0">
-        <button
-          onClick={() =>updateSteamState(true)
-          }
-        >
-          gry media
+      <div className="flex-grow-0 bottom-0 ">
+        <button onClick={() => updateSteamState(true)}>gry media</button>
+        <button onClick={() => createCall(pc)}>createCall</button>
+        <button onClick={() => answerCall(pc, inputref.current.value)}>
+          answer button
         </button>
-        <button onClick={()=>createCall()} >createCall</button>
       </div>
-          <input type="text" name="val" id="id" ref={inputref} />
+      <input type="text" name="val" id="id" ref={inputref} />
     </div>
   );
 }
