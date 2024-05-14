@@ -1,12 +1,37 @@
 import { useEffect } from "react";
 import { signInWithGoogle } from "../hooks/signWithGoogle";
+import handleCredentialResponse from "../utils/handleResponse";
+import { setSignIn, setUserData } from "../redux/userSlice";
+import { useDispatch } from "react-redux";
+import { onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
+import {
+  useSetIsLoginContex,
+  useSetUserContex,
+  useUserContex,
+} from "../componets/contex/userContex";
 
 export default function Login() {
+  let dispach = useDispatch();
+  const setIsLogin = useSetIsLoginContex();
+  const setUser = useSetUserContex();
+  const auth = getAuth();
+  const data = useUserContex();
   useEffect(() => {
-    // signInWithGoogle();
-    function handleCredentialResponse(response) {
-      console.log("Encoded JWT ID token: " + response.credential);
-    }
+    // let unsubcribe = onAuthStateChanged(auth, (user) => {
+    //   if (user) {
+    //     // dispach(setSignIn());
+    //     setIsLogin(true);
+    //     const user = auth.currentUser;
+    //     let userDetail = {
+    //       displayName: user.displayName,
+    //       email: user.email,
+    //       photoURL: user.photoURL,
+    //     };
+    //     setUser(userDetail);
+    //     console.log(data);
+    //   }
+    // });
     google.accounts.id.initialize({
       client_id:
         "321973348565-q71f9fh5u8hjbsfv7ou19f9rvvgr21kh.apps.googleusercontent.com",
@@ -17,7 +42,7 @@ export default function Login() {
       { theme: "outline", size: "large" }, // customization attributes
     );
     google.accounts.id.prompt();
-  });
+  }, []);
 
   return (
     <div className="h-screen overflow-hidden ">
@@ -26,10 +51,7 @@ export default function Login() {
           <a className="btn btn-ghost text-xl">VideoChat</a>
         </div>
         <div className="flex-none">
-          <button
-            className="btn btn-square btn-primary px-8 mx-4 text-base "
-            /* onClick={signWithGoogle} */
-          >
+          <button className="btn btn-square btn-primary px-8 mx-4 text-base ">
             {/* <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-5 h-5 stroke-current"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"></path></svg> */}
             Login
           </button>

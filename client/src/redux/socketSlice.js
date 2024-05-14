@@ -10,7 +10,7 @@ const socketSlice = createSlice({
   initialState,
   reducers: {
     setRestart: (state) => {
-      state.socket = io("http://localhost:3000/");
+      state.socket = io();
     },
   },
 });

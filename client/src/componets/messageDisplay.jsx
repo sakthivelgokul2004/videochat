@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getAuth } from "firebase/auth";
 import app from "../../firebase.config";
+import { useUserContex } from "./contex/userContex";
 
 export default function Message(props) {
   const [currMessage, setCurrMessage] = useState("");
   const [messages, setMessage] = useState([]);
   const socket = useSelector((state) => state.Socket.socket);
-  // const auth = getAuth(app);
-  const user = useSelector((state) => state.User.userdata);
+  const user = useUserContex();
   console.log(user);
   let room = props.room;
   useEffect(() => {
@@ -86,9 +86,6 @@ export default function Message(props) {
         onKeyUp={onEnter}
         value={currMessage}
       />
-      {/* <button onClick={signWithGoogle}>notufoeU</button>
-      <button onClick={addUser}>userdetail</button>
-      <Link to="/VideoChat">Blogs</Link> */}
     </div>
   );
 }

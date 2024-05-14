@@ -1,28 +1,41 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/home";
-import useLogin from "./hooks/useLogin";
 import VideoChat from "./pages/videoChat";
 import { PeerProvider } from "./componets/contex/peerContex";
 import Login from "./pages/login";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { setSignIn, setUserData } from "./redux/userSlice";
+import {
+  useIsLoginContex,
+  useSetIsLoginContex,
+  useSetUserContex,
+  useUserContex,
+} from "./componets/contex/userContex";
 
 function App() {
-  let auth = getAuth();
-  console.log(auth);
-  let dispach = useDispatch();
+  let isLogin = useIsLoginContex();
+  let data = useUserContex();
+  const setuser = useSetUserContex();
+  const auth = getAuth();
+  const setlogin = useSetIsLoginContex();
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
+    let unsubcribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        dispach(setSignIn);
-        dispach(setUserData(user));
+        const user = await auth.currentUser;
+        let userDetail = {
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        };
+        setlogin((prevs) => true);
+        setuser((prevs) => ({
+          ...prevs,
+          ...userDetail,
+        }));
       }
     });
-  });
-  const user = auth.currentUser;
+  }, []);
   return (
     <>
       <PeerProvider>
@@ -31,11 +44,11 @@ function App() {
             <Routes>
               <Route
                 path="/"
-                element={user ? <Home /> : <Navigate to={"/login"} />}
+                element={isLogin ? <Home /> : <Navigate to={"/login"} />}
               />
               <Route
                 path="/login"
-                element={user ? <Navigate to={"/"} /> : <Login />}
+                element={isLogin ? <Navigate to={"/"} /> : <Login />}
               />
               <Route path="/VideoChat" element={<VideoChat />} />
             </Routes>

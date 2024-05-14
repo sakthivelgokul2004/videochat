@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
 import Room from "../componets/roomController";
-import { useSelector, useDispatch } from "react-redux";
 import Message from "../componets/messageDisplay";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { io } from "socket.io-client";
 
 export default function Home() {
-  const socket = useSelector((state) => state.Socket.socket);
-  const dispach = useDispatch();
-  const [room, setroom] = useState();
+  const socket = io();
+  const [room, setroom] = useState("public");
   console.log(room);
-  const auth = getAuth();
   useEffect(() => {
     socket.on("connect", () => {
       console.log("connet");
     });
-    socket.on("hi", () => {
-      console.log("noy");
-    });
+    socket.emit("create", "public");
+    setroom("public");
   }, []);
 
   return (
