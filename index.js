@@ -6,14 +6,15 @@ import connectDb from "./db/index.js";
 import router from "./routes/auth.route.js";
 const __dirname = path.resolve();
 import User from "./models/user.Model.js";
-
+import { configDotenv } from "dotenv";
+configDotenv();
 app.use(express.static(path.join(__dirname, "/client/dist")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
-app.use(express.json())
-app.use(router)
+app.use(express.json());
+app.use(router);
 
 app.use(
   cors({
@@ -21,9 +22,9 @@ app.use(
     methods: ["GET,POST"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
-  }),
+  })
 );
-const db = connectDb()
+const db = connectDb();
 app.get("/", (req, res) => {
   res.send("<h1>Hello world</h1>");
 });
