@@ -1,20 +1,24 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getAuth } from "firebase/auth";
-import app from "../../firebase.config"
+import app from "../../firebase.config";
 const initialState = {
-  // auth: getAuth(app),
-  authState: getAuth(app) ? true: false,
+  isSignIn: false,
+  userdata: {},
 };
 
-const roomSlice = createSlice({
+const userSlice = createSlice({
   name: "Auth",
   initialState,
   reducers: {
-    setConneted: (state, action) => {
+    setSignIn: (state, action) => {
+      state.isSignIn = true;
+    },
+    setUserData: (state, action) => {
+      state.userdata = action.payload;
     },
   },
 });
 
-export const { setConneted } = roomSlice.actions;
+export const { setSignIn, setUserData } = userSlice.actions;
 
-export default roomSlice.reducer;
+export default userSlice.reducer;

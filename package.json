@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npm run  build && nodemon --env-file ./env/.env index.js",
-    "build":"cd client/ && npm run build"
+    "start": "node --env-file ./env/.env index.js",
+    "dev": "npm run  build && nodemon --env-file ./env/.env index.js",
+    "build": "npm install && npm install --prefix client &&  npm run build --prefix client "
   },
   "keywords": [],
   "author": "",

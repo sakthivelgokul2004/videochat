@@ -1,29 +1,37 @@
-import app from "../../firebase.config"
-import { getAuth,signInWithRedirect, GoogleAuthProvider,browserPopupRedirectResolver } from "firebase/auth";
+import app from "../../firebase.config";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  setPersistence,
+  browserLocalPersistence,
+  signInWithPopup,
+  browserPopupRedirectResolver,
+} from "firebase/auth";
 
-export async function signWithGoogle() {
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-  await signInWithRedirect(auth, provider, browserPopupRedirectResolver)
-    .then((result) => {
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const token = credential.accessToken;
-      // The signed-in user info.
-      const user = result.user;
+// export async function signWithGoogle() {
+//   const auth = getAuth(app);
+//   const provider = new GoogleAuthProvider();
+//   let result = await setPersistence(auth, browserLocalPersistence)
+//     .then(() => {
+//       return signInWithPopup(auth, provider, browserPopupRedirectResolver);
+//     })
+//     .catch((e) => console.log(e));
 
-    })
-    .catch((error) => {
-      // Handle Errors here.
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      // The email of the user's account used.
-      const email = error.customData.email;
-      // The AuthCredential type that was used.
-      const credential = GoogleAuthProvider.credentialFromError(error);
-    });
+//   if (result != undefined) {
+//     return "success";
+//   } else {
+//     return "error";
+//   }
+// }
+export async function signInWithGoogle() {
+  function handleCredentialResponse(response) {
+    console.log("Encoded JWT ID token: " + response.credential);
+  }
+  window.onload = function () {
+    // also display the One Tap dialog
+  };
 }
-
-export async function addUser(){
+export async function addUser() {
   const auth = getAuth();
   const user = auth.currentUser;
   console.log(user.displayName, user.email, user.photoURL);
@@ -36,11 +44,11 @@ export async function addUser(){
   const res = await fetch("/addUser", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json" 
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(userObj),
   });
   if (res.ok) {
     console.log("yess");
   }
-} 
+}

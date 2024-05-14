@@ -1,7 +1,3 @@
-import { useEffect,useRef,useState } from "react";
-import { useSelector } from "react-redux";
-import { usePeerContex, useRemoteStreamContex } from "./contex/peerContex";
-import ReactPlayer from 'react-player'
 
 export default  function  VideoContainer(){
   const pc =usePeerContex()
