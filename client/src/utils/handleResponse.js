@@ -4,15 +4,21 @@ import {
   setPersistence,
   browserLocalPersistence,
   signInWithCredential,
+  signInWithRedirect,
+  browserPopupRedirectResolver,
+  getRedirectResult,
+  browserSessionPersistence,
 } from "firebase/auth";
 
-export default function handleCredentialResponse(response) {
-  console.log("Encoded JWT ID token: " + response.credential);
-  const idToken = response.credential;
-  const credential = GoogleAuthProvider.credential(idToken);
+export default async function handleCredentialResponse() {
   const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  signInWithRedirect(auth, provider, browserPopupRedirectResolver);
+
+  const result = await getRedirectResult(auth);
+  const credential = GoogleAuthProvider.credentialFromResult(result);
   // Sign in with credential from the Google user.
-  setPersistence(auth, browserLocalPersistence).then(async () => {
+  setPersistence(auth, browserSessionPersistence).then(async () => {
     try {
       return await signInWithCredential(auth, credential);
     } catch (error) {

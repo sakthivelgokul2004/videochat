@@ -1,91 +1,41 @@
 import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { getAuth } from "firebase/auth";
 import app from "../../firebase.config";
-import { useUserContex } from "./contex/userContex";
+import { useUserContex } from "../contex/userContex";
+import { PublicMessage } from "./Messages/publicMessage";
+import { MessageNavbar } from "./Messages/MessageNavbar";
+import { HandleMessage } from "./Messages/handleMessage";
 
 export default function Message(props) {
-  const [currMessage, setCurrMessage] = useState("");
   const [messages, setMessage] = useState([]);
-  const socket = useSelector((state) => state.Socket.socket);
-  const user = useUserContex();
-  console.log(user);
+  const socket = props.socket;
   let room = props.room;
+  let user = useUserContex();
   useEffect(() => {
-    socket.on("newMesage", (val) => setMessage((prevs) => [...prevs, val]));
+    socket.on("newMesage", (val) => {
+      console.log(val);
+      if (val.receiverId == room) {
+        setMessage((prevs) => [...prevs, val]);
+      }
+    });
   }, []);
-
-  const handleMessage = (event) => {
-    setCurrMessage(() => event.target.value);
-  };
-
-  function onEnter(e) {
-    if (e.key === "Enter") {
-      socket.emit("message", currMessage);
-      setCurrMessage("");
-    }
-  }
 
   return (
     <div className="flex flex-col justify-end w-screen relative overflow-hidden">
-      {/* navbar */}
-      <div className="navbar bg-base-100 absolute top-0 ">
-        <div className="flex-none">
-          <button className="btn btn-square btn-ghost">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="inline-block w-5 h-5 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              ></path>
-            </svg>
-          </button>
-        </div>
-        <div className="flex-1">
-          <p className="btn btn-ghost text-xl">{room}</p>
-        </div>
-        <div className="flex-none">
-          <button className="btn btn-square btn-ghost">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="inline-block w-5 h-5 stroke-current"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-              ></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-      {/* end navbar */}
+      <MessageNavbar room={room} />
       {messages.length
         ? messages.map((Message) => {
+            console.log(Message);
             return (
-              <p key={Message} className="chat-bubble">
-                {Message}
-              </p>
+              <>
+                <PublicMessage message={Message} user={user.email} />
+                {/* <p key={Message._id} className="chat-bubble">
+                  {Message.text}
+                </p> */}
+              </>
             );
           })
         : ""}
-      <input
-        type="text"
-        placeholder="Type here"
-        className="input input-bordered input-accent  m-8 "
-        onChange={handleMessage}
-        onKeyUp={onEnter}
-        value={currMessage}
-      />
+      <HandleMessage room={room} socket={socket} />
     </div>
   );
 }

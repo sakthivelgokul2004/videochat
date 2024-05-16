@@ -1,49 +1,6 @@
-import { useEffect } from "react";
-import { signInWithGoogle } from "../hooks/signWithGoogle";
 import handleCredentialResponse from "../utils/handleResponse";
-import { setSignIn, setUserData } from "../redux/userSlice";
-import { useDispatch } from "react-redux";
-import { onAuthStateChanged } from "firebase/auth";
-import { getAuth } from "firebase/auth";
-import {
-  useSetIsLoginContex,
-  useSetUserContex,
-  useUserContex,
-} from "../componets/contex/userContex";
 
 export default function Login() {
-  let dispach = useDispatch();
-  const setIsLogin = useSetIsLoginContex();
-  const setUser = useSetUserContex();
-  const auth = getAuth();
-  const data = useUserContex();
-  useEffect(() => {
-    // let unsubcribe = onAuthStateChanged(auth, (user) => {
-    //   if (user) {
-    //     // dispach(setSignIn());
-    //     setIsLogin(true);
-    //     const user = auth.currentUser;
-    //     let userDetail = {
-    //       displayName: user.displayName,
-    //       email: user.email,
-    //       photoURL: user.photoURL,
-    //     };
-    //     setUser(userDetail);
-    //     console.log(data);
-    //   }
-    // });
-    google.accounts.id.initialize({
-      client_id:
-        "321973348565-q71f9fh5u8hjbsfv7ou19f9rvvgr21kh.apps.googleusercontent.com",
-      callback: handleCredentialResponse,
-    });
-    google.accounts.id.renderButton(
-      document.getElementById("buttonDiv"),
-      { theme: "outline", size: "large" }, // customization attributes
-    );
-    google.accounts.id.prompt();
-  }, []);
-
   return (
     <div className="h-screen overflow-hidden ">
       <div className="navbar bg-base-100">
@@ -69,11 +26,10 @@ export default function Login() {
             </p>
             <button
               className="btn my-3 btn-primary text-lg  "
-              /* onClick={signWithGoogle} */ id="buttonDiv"
+              onClick={handleCredentialResponse}
             >
               Login via Google
             </button>
-            {/* <p className="text-sm">Login using Gmail </p> */}
           </div>
         </div>
       </div>
