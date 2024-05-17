@@ -1,12 +1,12 @@
+import { useRoomContex, useSocketContex } from "../contex/SocketContex";
+
 export default function Room(props) {
-  const socket = props.socket;
-  const room = props.room;
-  const setRoom = props.setroom;
-  console.log(room);
+  const socket = useSocketContex();
+  const [room, setroom] = useRoomContex();
 
   function createRoom() {
     socket.emit("create", "public");
-    setRoom("public");
+    setroom("public");
   }
   return (
     <div className="w-1/4 h-screen flex flex-col items-end ">

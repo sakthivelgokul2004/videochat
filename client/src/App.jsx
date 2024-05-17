@@ -1,11 +1,11 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Home from "./pages/home";
+import Home from "./componets/home";
 import VideoChat from "./pages/videoChat";
 import { PeerProvider } from "./contex/peerContex";
 import Login from "./pages/login";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   useIsLoginContex,
   useSetIsLoginContex,
@@ -15,6 +15,7 @@ import {
 import { SocketContexProvider } from "./contex/SocketContex";
 import { useisUserPersisted } from "./hooks/isAuthPersisted";
 import { Loading } from "./pages/loading";
+import { addUser } from "./utils/adduser";
 
 function App() {
   let isLogin = useIsLoginContex();
@@ -22,8 +23,6 @@ function App() {
   const setuser = useSetUserContex();
   const auth = getAuth();
   const setlogin = useSetIsLoginContex();
-  console.log(data);
-  // const loading = useisUserPersisted();
   const [loading, setLoading] = useState(true);
   console.log(loading);
   setTimeout(() => {
@@ -43,6 +42,7 @@ function App() {
           ...prevs,
           ...userDetail,
         }));
+        setLoading(false);
         await addUser();
       }
     });
@@ -57,13 +57,14 @@ function App() {
               <Routes>
                 <Route
                   path="/"
-                  element={isLogin ? <Home /> : <Navigate to={"/login"} />}
+                  element={!loading ? <Home /> : <Loading loading={loading} />}
                 />
                 <Route
                   path="/login"
                   element={isLogin ? <Navigate to={"/"} /> : <Login />}
                 />
                 <Route path="/VideoChat" element={<VideoChat />} />
+                <Route path="/Loading" element={<Loading />} />
               </Routes>
             </BrowserRouter>
           </div>

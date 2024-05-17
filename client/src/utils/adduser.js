@@ -4,7 +4,6 @@ import { getAuth } from "firebase/auth";
 export async function addUser() {
   const auth = getAuth();
   const user = auth.currentUser;
-  console.log(user.displayName, user.email, user.photoURL);
   let userObj = {
     name: user.displayName,
     email: user.email,

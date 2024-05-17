@@ -16,23 +16,25 @@ export function SocketContexProvider({ children }) {
   const [socket, setSocket] = useState();
   const [room, setRoom] = useState("public");
   let user = useUserContex();
-  console.log(user.email);
-
+  console.log(user);
   useEffect(() => {
-    const socket = io("http://localhost:3000/", {
-      query: {
-        userEmail: user.email,
-      },
-    });
-
-    setSocket(socket);
-    socket.on("connect", () => {
-      console.log("connet");
-    });
+    try {
+      const socket = io("http:/localhost:3000/", {
+        query: {
+          userEmail: user.email,
+        },
+      });
+      socket.on("connect", () => {
+        console.log("connet");
+      });
+      setSocket(socket);
+    } catch (e) {
+      console.log(e);
+    }
   }, []);
   return (
     <>
-      <SocketContex.Provider value={[socket, setSocket]}>
+      <SocketContex.Provider value={socket}>
         <RoomContex.Provider value={[room, setRoom]}>
           {children}
         </RoomContex.Provider>

@@ -4,11 +4,12 @@ import { useUserContex } from "../contex/userContex";
 import { PublicMessage } from "./Messages/publicMessage";
 import { MessageNavbar } from "./Messages/MessageNavbar";
 import { HandleMessage } from "./Messages/handleMessage";
+import { useRoomContex, useSocketContex } from "../contex/SocketContex";
 
 export default function Message(props) {
   const [messages, setMessage] = useState([]);
-  const socket = props.socket;
-  let room = props.room;
+  const socket = useSocketContex();
+  const [room, setroom] = useRoomContex();
   let user = useUserContex();
   useEffect(() => {
     socket.on("newMesage", (val) => {
