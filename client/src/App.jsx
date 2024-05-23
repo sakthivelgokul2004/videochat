@@ -13,7 +13,6 @@ import {
   useUserContex,
 } from "./contex/userContex";
 import { SocketContexProvider } from "./contex/SocketContex";
-import { useisUserPersisted } from "./hooks/isAuthPersisted";
 import { Loading } from "./pages/loading";
 import { addUser } from "./utils/adduser";
 
@@ -24,12 +23,9 @@ function App() {
   const auth = getAuth();
   const setlogin = useSetIsLoginContex();
   const [loading, setLoading] = useState(true);
-  console.log(loading);
-  setTimeout(() => {
-    setLoading(false);
-  }, 5000);
   useEffect(() => {
     let unsubcribe = onAuthStateChanged(auth, async (user) => {
+      console.log("trigger");
       if (user) {
         const user = auth.currentUser;
         let userDetail = {
@@ -37,17 +33,32 @@ function App() {
           email: user.email,
           photoURL: user.photoURL,
         };
-        setlogin((prevs) => true);
+        setlogin(true);
         setuser((prevs) => ({
           ...prevs,
           ...userDetail,
         }));
         setLoading(false);
         await addUser();
+      } else {
+        console.log("notu");
+        setlogin(false);
+        setLoading(false);
+        console.log(isLogin);
       }
     });
     return unsubcribe;
   }, []);
+  function decide() {
+    console.log("hi");
+    if (loading) {
+      return <Loading loading={loading} />;
+    }
+    if (isLogin) {
+      return <Home />;
+    }
+    return <Login />;
+  }
   return (
     <>
       <PeerProvider>
@@ -57,8 +68,18 @@ function App() {
               <Routes>
                 <Route
                   path="/"
-                  element={!loading ? <Home /> : <Loading loading={loading} />}
+                  element={
+                    decide()
+                    // !loading && isLogin ? (
+                    //   <Home />
+                    // ) : loading ? (
+                    //   <Loading loading={loading} />
+                    // ) : (
+                    //   <Login />
+                    // )
+                  }
                 />
+                {/* <Loading loading={loading} */}
                 <Route
                   path="/login"
                   element={isLogin ? <Navigate to={"/"} /> : <Login />}

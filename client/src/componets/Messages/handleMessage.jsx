@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useUserContex } from "../../contex/userContex";
+import { useRoomContex } from "../../contex/SocketContex";
 
 export function HandleMessage(props) {
   const [currMessage, setCurrMessage] = useState("");
   const user = useUserContex();
-  let room = props.room;
+  let [roomobject, setRoom] = useRoomContex();
+  let room = roomobject.room;
+
   const socket = props.socket;
 
   const handleMessage = (event) => {
@@ -13,14 +16,29 @@ export function HandleMessage(props) {
 
   function onEnter(e) {
     if (e.key === "Enter") {
-      let msg = currMessage;
-      let message = {
-        ...user,
-        text: msg,
-        receiver: room,
-      };
-      socket.emit("message", message);
-      setCurrMessage("");
+      if (room == "public") {
+        let msg = currMessage;
+        let message = {
+          ...user,
+          text: msg,
+          receiver: room,
+        };
+        socket.emit("publicMessage", message);
+        setCurrMessage("");
+      } else {
+        let msg = currMessage;
+        let message = {
+          ...user,
+          text: msg,
+          receiver: room,
+        };
+        let reqestobj = {
+          socketId: roomobject.socketId,
+          message,
+        };
+        socket.emit("privateMessage", reqestobj);
+        setCurrMessage("");
+      }
     }
   }
 

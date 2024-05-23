@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { usePeerContex } from "../contex/peerContex";
+
 export default function VideoContainer() {
   const pc = usePeerContex();
   // const [remoteStream,setRemoteStrem]=useRemoteStreamContex()
   let remoteStream = new MediaStream();
   const ref = useRef();
   const remoteRef = useRef();
-  const localStremState = useSelector((state) => state.Peer.localStremState);
   const [state, setState] = useState();
 
   useEffect(() => {

@@ -1,12 +1,23 @@
+import { useEffect, useState } from "react";
 import { useRoomContex, useSocketContex } from "../contex/SocketContex";
+import { json } from "react-router-dom";
+import { Contact } from "./contacts";
 
 export default function Room(props) {
   const socket = useSocketContex();
   const [room, setroom] = useRoomContex();
+  const [liveUser, setLiveUser] = useState([]);
 
-  function createRoom() {
-    socket.emit("create", "public");
-    setroom("public");
+  useEffect(() => {
+    socket.on("getUser", async (lives) => {
+      console.log(lives);
+      setLiveUser((prevs) => [...lives]);
+    });
+    return () => socket.off("getUser");
+  }, []);
+
+  function changeRoom(para, SocketId) {
+    setroom((prevs) => ({ ...prevs, socketId: SocketId, room: para }));
   }
   return (
     <div className="w-1/4 h-screen flex flex-col items-end ">
@@ -18,10 +29,19 @@ export default function Room(props) {
         ></label>
         <ul className="menu p-4  h-full w-full bg-base-200 text-base-content ">
           <li>
-            <button onClick={createRoom}>public</button>
+            <button /* onClick={createRoom} */>public</button>
           </li>
           <li>
-            <a>Sidebar Item 2</a>
+            {liveUser.length
+              ? liveUser.map((contact) => {
+                  // console.log(contact);
+                  return (
+                    <>
+                      <Contact contact={contact.user} handleRoom={changeRoom} />
+                    </>
+                  );
+                })
+              : ""}
           </li>
         </ul>
       </div>

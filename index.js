@@ -19,7 +19,7 @@ app.use(router);
 app.use(
   cors({
     origin: "*",
-    methods: ["GET,POST"],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
     optionsSuccessStatus: 204,
   })
