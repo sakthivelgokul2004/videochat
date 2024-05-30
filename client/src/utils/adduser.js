@@ -10,7 +10,7 @@ export async function addUser() {
     photoURL: user.photoURL,
   };
 
-  const res = await fetch("http://localhost:3000/addUser", {
+  const res = await fetch("/addUser", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
