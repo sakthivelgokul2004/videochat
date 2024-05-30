@@ -3,7 +3,7 @@ import { useRoomContex, useSocketContex } from "../contex/SocketContex";
 import { json } from "react-router-dom";
 import { Contact } from "./contacts";
 
-export default function Room(props) {
+export default function Room() {
   const socket = useSocketContex();
   const [room, setroom] = useRoomContex();
   const [liveUser, setLiveUser] = useState([]);
@@ -11,6 +11,8 @@ export default function Room(props) {
   useEffect(() => {
     socket.on("getUser", async (lives) => {
       console.log(lives);
+      console.log(socket.id);
+      lives = lives.filter((obj) => obj.socketId != socket.id);
       setLiveUser((prevs) => [...lives]);
     });
     return () => socket.off("getUser");
@@ -37,7 +39,11 @@ export default function Room(props) {
                   // console.log(contact);
                   return (
                     <>
-                      <Contact contact={contact.user} handleRoom={changeRoom} />
+                      <Contact
+                        contact={contact.user}
+                        socketId={contact.socketId}
+                        handleRoom={changeRoom}
+                      />
                     </>
                   );
                 })

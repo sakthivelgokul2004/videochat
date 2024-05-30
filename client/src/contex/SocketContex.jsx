@@ -16,7 +16,6 @@ export function SocketContexProvider({ children }) {
   const [socket, setSocket] = useState();
   const [room, setRoom] = useState({ room: "public", socketId: 0 });
   let user = useUserContex();
-  // console.log(user);
   useEffect(() => {
     try {
       const socket = io("http://localhost:3000/");

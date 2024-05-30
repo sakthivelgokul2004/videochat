@@ -8,16 +8,15 @@ export default function VideoContainer() {
   const ref = useRef();
   const remoteRef = useRef();
   const [state, setState] = useState();
-
   useEffect(() => {
     async function inial() {
       let localStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
-      console.log(localStream);
-      setState(localStream);
       ref.current.srcObject = localStream;
+      console.log();
+      setState(localStream);
       localStream.getTracks().forEach((track) => {
         pc.addTrack(track, localStream);
 

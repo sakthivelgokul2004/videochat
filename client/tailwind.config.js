@@ -3,6 +3,7 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     colors: {
+      border: "#cbd5e11a",
       "mine-shaft": {
         50: "#f6f6f6",
         100: "#e7e7e7",

@@ -1,6 +1,6 @@
 import { handleTimeAndDate } from "../../utils/handleDateAndTime";
 
-export function privateMessages(props) {
+export function PrivateMessages(props) {
   let Messgae = props.message;
   let usermail = props.email;
   console.log(Messgae);
@@ -9,18 +9,16 @@ export function privateMessages(props) {
   return (
     <>
       <div className={`chat  ${style}`}>
-        <div className="chat-bubble ">
-          <div className="chat-header font-bold text-xs text-secondary ">
-            {Messgae.senderName}
-          </div>
-          <div className=" flex flex-col  items-end ">
-            <div className="">
-              {Messgae.text}
-              <time className="text-xs opacity-50 pl-2 ">{time}</time>
+        <div className="chat chat-start">
+          <div className="chat-bubble max-w-48 ">
+            <div className=" flex flex-col  items-end ">
+              <div className="">
+                {Messgae.text}
+                <time className="text-xs opacity-50 pl-2 ">{time}</time>
+              </div>
             </div>
           </div>
         </div>
-        {/* <div className="chat-footer opacity-50">Delivered</div> */}
       </div>
     </>
   );

@@ -1,14 +1,39 @@
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { signOut } from "../../utils/signOut";
+import { FaVideo } from "react-icons/fa";
+import { collection, doc } from "firebase/firestore";
+import { db, callDoc } from "../../../firebase.config";
 
 export function MessageNavbar(props) {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   let room = props.room;
+  let socket = props.socket;
+  let socketId = props.socketId;
+  function startOfferCall(socketId) {
+    console.log(callDoc.id);
+    socket.emit("initiateCall", { room: callDoc.id, socketId: socketId });
+    navigate(`/VideoChat/${callDoc.id}/caller`);
+  }
+
   return (
     <>
       {/* navbar */}
-      <div className="navbar bg-base-100 absolute top-0 ">
+      <div className="navbar  absolute top-0 border-border bg-base-200  border-b-2">
         <div className="flex-1">
           <p className="btn btn-ghost text-xl">{room}</p>
         </div>
+        {room != "public" ? (
+          <div
+            className="btn btn-square btn-ghost "
+            onClick={() => startOfferCall(socketId)}
+          >
+            <FaVideo />
+          </div>
+        ) : (
+          ""
+        )}
         <div className="flex-none dropdown dropdown-end">
           <button
             tabIndex={0}
@@ -41,22 +66,6 @@ export function MessageNavbar(props) {
             </li>
           </ul>
         </div>
-        {/* <div className="dropdown dropdown-end">
-          <div tabIndex={0} role="button" className="btn btn-ghost rounded-btn">
-            Dropdown
-          </div>
-          <ul
-            tabIndex={0}
-            className="menu dropdown-content z-[1] p-2 shadow bg-base-100 rounded-box w-52 mt-4"
-          >
-            <li>
-              <a>Item 1</a>
-            </li>
-            <li>
-              <a>Item 2</a>
-            </li>
-          </ul>
-        </div> */}
       </div>
       {/* end navbar */}
     </>

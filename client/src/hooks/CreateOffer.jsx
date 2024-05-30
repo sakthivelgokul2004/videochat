@@ -1,20 +1,23 @@
-
-import { collection, addDoc,doc ,setDoc,onSnapshot} from "firebase/firestore"; 
+import {
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  onSnapshot,
+} from "firebase/firestore";
 import { db } from "../../firebase.config";
-import 'firebase/firestore';
-export default async function createOffer(pc){
+import "firebase/firestore";
+import { callDoc } from "../../firebase.config";
 
-  const callsCollection=collection(db, 'calls');
-const callDoc = doc(callsCollection) 
-  const offerCandidates = collection(callDoc,'offerCandidates');
-  const answerCandidates = collection(callDoc,'answerCandidates');
-
-  
+export default async function createOffer(pc, callId) {
+  const callsCollection = collection(db, "calls");
+  const callDoc = doc(callsCollection, callId);
+  const offerCandidates = collection(callDoc, "offerCandidates");
+  const answerCandidates = collection(callDoc, "answerCandidates");
 
   // Get candidates for caller, save to db
   pc.onicecandidate = (event) => {
-    console.log("candidate");
-    event.candidate && addDoc( offerCandidates,event.candidate.toJSON());
+    event.candidate && addDoc(offerCandidates, event.candidate.toJSON());
   };
 
   // Create offer
@@ -29,7 +32,7 @@ const callDoc = doc(callsCollection)
   await setDoc(callDoc, { offer });
 
   // Listen for remote answer
-   onSnapshot(callDoc,(snapshot) => {
+  onSnapshot(callDoc, (snapshot) => {
     const data = snapshot.data();
     if (!pc.currentRemoteDescription && data?.answer) {
       const answerDescription = new RTCSessionDescription(data.answer);
@@ -38,13 +41,13 @@ const callDoc = doc(callsCollection)
   });
 
   // When answered, add candidate to peer connection
-   onSnapshot(answerCandidates,(snapshot) => {
+  onSnapshot(answerCandidates, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
-      if (change.type === 'added') {
+      if (change.type === "added") {
         const candidate = new RTCIceCandidate(change.doc.data());
         pc.addIceCandidate(candidate);
       }
     });
   });
-return callDoc.id
+  return callDoc.id;
 }

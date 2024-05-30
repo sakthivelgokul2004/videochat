@@ -66,25 +66,15 @@ function App() {
           <div className="h-screen w-screen">
             <BrowserRouter>
               <Routes>
-                <Route
-                  path="/"
-                  element={
-                    decide()
-                    // !loading && isLogin ? (
-                    //   <Home />
-                    // ) : loading ? (
-                    //   <Loading loading={loading} />
-                    // ) : (
-                    //   <Login />
-                    // )
-                  }
-                />
-                {/* <Loading loading={loading} */}
+                <Route path="/" element={decide()} />
                 <Route
                   path="/login"
                   element={isLogin ? <Navigate to={"/"} /> : <Login />}
                 />
-                <Route path="/VideoChat" element={<VideoChat />} />
+                <Route
+                  path="/VideoChat/:room?/:state"
+                  element={<VideoChat />}
+                />
                 <Route path="/Loading" element={<Loading />} />
               </Routes>
             </BrowserRouter>
