@@ -13,7 +13,7 @@ export function Contact(props) {
             <img src={contact.photoUrl} />
           </div>
         </div>
-        <a>{contact.userName}</a>
+        <a className="hidden md:block">{contact.userName}</a>
       </div>
     </>
   );

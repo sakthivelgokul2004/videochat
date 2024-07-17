@@ -4,6 +4,7 @@ import {
   setPersistence,
   browserLocalPersistence,
   signInWithCredential,
+  signInWithPopup,
   signInWithRedirect,
   browserPopupRedirectResolver,
   getRedirectResult,
@@ -13,7 +14,7 @@ import {
 export default async function handleCredentialResponse() {
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
-  signInWithRedirect(auth, provider, browserPopupRedirectResolver);
+  signInWithPopup(auth, provider, browserPopupRedirectResolver);
 
   const result = await getRedirectResult(auth);
   const credential = GoogleAuthProvider.credentialFromResult(result);

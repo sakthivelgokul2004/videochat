@@ -33,6 +33,7 @@ function App() {
           email: user.email,
           photoURL: user.photoURL,
         };
+        console.log(userDetail)
         setlogin(true);
         setuser((prevs) => ({
           ...prevs,
