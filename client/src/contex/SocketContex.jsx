@@ -12,14 +12,14 @@ export function useRoomContex() {
   return useContext(RoomContex);
 }
 
-export function SocketContexProvider({ children }) {
+export async function SocketContexProvider({ children }) {
   const [socket, setSocket] = useState();
-  const [room, setRoom] = useState({ room: "public", socketId: 0 });
+  const [room, setRoom] = useState({ roomName: "public", socketId: 0 });
   let user = useUserContex();
   useEffect(() => {
     try {
-      const socket = io();
-      socket.on("connect", () => {
+      const socket = io("ws://localhost:3000/api",{});
+    socket.on("connect", () => {
         console.log("connet");
       });
       setSocket(socket);

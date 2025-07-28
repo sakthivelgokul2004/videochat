@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { usePeerContex } from "../contex/peerContex";
 
 export default function VideoContainer() {
-  const pc = usePeerContex();
-  // const [remoteStream,setRemoteStrem]=useRemoteStreamContex()
+  const servers = {
+    iceServers: [
+      {
+        urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
+      },
+    ],
+    iceCandidatePoolSize: 10,
+  };
+  const pc = new RTCPeerConnection(servers)
   let remoteStream = new MediaStream();
   const ref = useRef();
   const remoteRef = useRef();

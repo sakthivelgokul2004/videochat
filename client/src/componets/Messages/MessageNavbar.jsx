@@ -1,8 +1,5 @@
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { signOut } from "../../utils/signOut";
 import { FaVideo } from "react-icons/fa";
-import { collection, doc } from "firebase/firestore";
-import { db, callDoc } from "../../../firebase.config";
 
 export function MessageNavbar(props) {
   const navigate = useNavigate();
@@ -20,14 +17,14 @@ export function MessageNavbar(props) {
   return (
     <>
       {/* navbar */}
-      <div className="navbar  absolute top-0 border-border bg-base-200  border-b-2">
+      <div className="navbar   border-border bg-base-200  border-b-2">
         <div className="flex-1">
-          <p className="btn btn-ghost text-xl">{room}</p>
+          <p className="btn btn-ghost text-xl">VideoChat</p>
         </div>
         {room != "public" ? (
           <div
             className="btn btn-square btn-ghost "
-            onClick={() => startOfferCall(socketId)}
+            onClick={() => console.log("start call")}
           >
             <FaVideo />
           </div>
@@ -59,7 +56,7 @@ export function MessageNavbar(props) {
             className="menu dropdown-content z-[1] p-2 shadow  rounded-box w-52 mt-4 bg-primary-content"
           >
             <li>
-              <button onClick={signOut}>Sign Out</button>
+              <button onClick={()=>console.log("sign out")}>Sign Out</button>
             </li>
             <li>
               <a>Item 2</a>

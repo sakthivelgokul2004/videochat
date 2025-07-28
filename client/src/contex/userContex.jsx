@@ -1,38 +1,54 @@
-import { createContext, useContext, useState } from "react";
-import { io } from "socket.io-client";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const UserContex = createContext();
-const SetuserContex = createContext();
-const IsLoginContex = createContext();
-const SetIsLoginContex = createContext();
+const AuthContex = createContext();
 
 export function useUserContex() {
   return useContext(UserContex);
 }
-export function useSetUserContex() {
-  return useContext(SetuserContex);
-}
-export function useIsLoginContex() {
-  return useContext(IsLoginContex);
-}
-export function useSetIsLoginContex() {
-  return useContext(SetIsLoginContex);
+export function useAuthContex() {
+  return useContext(AuthContex);
 }
 
 export function UserProvider({ children }) {
-  let [isLogin, setIsLogin] = useState(false);
+  let [auth, setAuth] = useState(false);
   let [user, setUser] = useState({ displayName: "", email: "", photoURL: "" });
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const auth = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/auth/user", {
+          method: 'GET',
+        })
+        if (res.ok) {
+        const data = await res.json()
+        console.log("User:", data)
+        console.log("User:", data.userName)
+        setUser((prvies) => ({ displayName: data.userName, email: data.email, photoURL: data.photoUrl }))
+        setAuth(true);
+        }
+        else{
+          console.log("Not Authenticated")
+          setAuth(false);
+          setUser({ displayName: "", email: "", photoURL: "" });
+        }
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+        setAuth(false);
+        console.log(error)
+      }
+    }
+    auth()
+  }, [])
 
   return (
     <>
-      <UserContex.Provider value={user}>
-        <SetuserContex.Provider value={setUser}>
-          <IsLoginContex.Provider value={isLogin}>
-            <SetIsLoginContex.Provider value={setIsLogin}>
-              {children}
-            </SetIsLoginContex.Provider>
-          </IsLoginContex.Provider>
-        </SetuserContex.Provider>
+      <UserContex.Provider value={[user, setUser]}>
+        <AuthContex.Provider value={[auth, setAuth, loading]}>
+          {children}
+        </AuthContex.Provider>
       </UserContex.Provider>
     </>
   );

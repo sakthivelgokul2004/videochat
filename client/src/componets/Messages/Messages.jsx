@@ -5,11 +5,12 @@ import { PublicMessage } from "./publicMessage";
 export function Messages(props) {
   const user = useUserContex();
   let Messages = props.publicMessages;
-  console.log(props);
-  let room = props.Room;
+  console.log("Messages" + props);
+  let roomName = props.RoomName;
   let socketId = props.socketId;
 
-  if (room == "public") {
+  console.log("roomName", roomName);
+  if (roomName== "public") {
     return (
       <>
         {Messages.length
@@ -27,7 +28,7 @@ export function Messages(props) {
   let privateMessage = props.privateMessages;
   console.log(socketId);
 
-  if (room != "public" && socketId != 0) {
+  if (roomName!= "public" && socketId != 0) {
     let currentRoomMessage = getMessagesBySocketId(privateMessage, socketId);
     console.log(currentRoomMessage);
     return (

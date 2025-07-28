@@ -4,10 +4,9 @@ import { useRoomContex } from "../../contex/SocketContex";
 
 export function HandleMessage(props) {
   const [currMessage, setCurrMessage] = useState("");
-  const user = useUserContex();
-  let [roomobject, setRoom] = useRoomContex();
-  let room = roomobject.room;
-
+  const [user,setUser] = useUserContex();
+  let room = props.room;
+  const setRoom = props.setRoom;
   const socket = props.socket;
 
   const handleMessage = (event) => {
@@ -16,13 +15,15 @@ export function HandleMessage(props) {
 
   function onEnter(e) {
     if (e.key === "Enter") {
-      if (room == "public") {
+      if (room.roomName == "public") {
         let msg = currMessage;
+        console.log(currMessage)
         let message = {
           ...user,
           text: msg,
-          receiver: room,
+          receiver: room.roomName,
         };
+        console.log("publicMessage", message)
         socket.emit("publicMessage", message);
         setCurrMessage("");
       } else {
@@ -30,12 +31,13 @@ export function HandleMessage(props) {
         let message = {
           ...user,
           text: msg,
-          receiver: room,
+          receiver: room.roomName,
         };
         let reqestobj = {
-          socketId: roomobject.socketId,
+          socketId: room.socketId,
           message,
         };
+        console.log("privateMessage", reqestobj);
         socket.emit("privateMessage", reqestobj);
         setCurrMessage("");
       }
@@ -43,15 +45,15 @@ export function HandleMessage(props) {
   }
 
   return (
-    <>
+    <div className="w-full flex justify-center bg-base-200 p-4">
       <input
         type="text"
         placeholder="Type here"
-        className="input input-bordered input-accent  m-8 "
+        className="input input-bordered input-accent  w-full "
         onChange={handleMessage}
         onKeyUp={onEnter}
         value={currMessage}
       />
-    </>
+    </div>
   );
 }
