@@ -32,7 +32,7 @@ router.get("/user", async (req, res) => {
       else {
         console.log("had nothing")
         res.status(400).send("not authzed");
-        res.redirect("http://localhost:3000/home")
+        res.redirect("/home")
       }
     } catch (error) {
       console.log(error)
@@ -48,6 +48,7 @@ router.get("/user", async (req, res) => {
 )
 router.get('/callback', async (req, res) => {
   const { code } = req.query;
+  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/callback`;
   if (!code) {
     return res.status(400).send('Authorization code not found.');
   }
@@ -62,7 +63,7 @@ router.get('/callback', async (req, res) => {
         client_secret: process.env.Client_SECRET,
         code: code,
         grant_type: 'authorization_code',
-        redirect_uri: 'http://localhost:3000/api/auth/callback',
+        redirect_uri: redirectUri,
       }),
     });
     const tokens = await response.json();
