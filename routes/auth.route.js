@@ -49,7 +49,6 @@ router.get("/user", async (req, res) => {
 router.get('/callback', async (req, res) => {
   const { code } = req.query;
   const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/callback`;
-  console.log(redirectUri);
   if (!code) {
     return res.status(400).send('Authorization code not found.');
   }

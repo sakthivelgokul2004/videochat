@@ -2,10 +2,12 @@ import React, { useEffect } from 'react'
 import { useGoogleLogin } from '@react-oauth/google';
 
 const CustomSigninGoogle = () => {
+  const redirectUri = `${window.location.origin}/api/auth/callback`;
+
   const login = useGoogleLogin({
     onSuccess: tokenResponse => console.log(tokenResponse),
     ux_mode: "redirect",
-    redirect_uri: "http://localhost:3000/api/auth/callback",
+    redirect_uri: redirectUri,
     flow: 'auth-code',
     state: "login"
   });
