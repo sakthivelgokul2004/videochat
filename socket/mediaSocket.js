@@ -1,32 +1,48 @@
+import { createRoom, generateSecureId } from "../utils/roomManager.js";
 import signal from "../utils/MediaSignal.js";
-/** @typedef {import("socket.io").Server} SocketIOServer */
+import { PeerStore } from "../utils/PeerStore.js";
+
+/** @typedef {import("socket.io").Server} SocketIOServer 
+ * @typedef {import("mediasoup").types.Worker} Worker
+ **/
 
 /**
  * @param {SocketIOServer} io
+  * @param {Worker} worker
  */
-export default function MediaSocket(io, router) {
+export default function MediaSocket(io, worker) {
   const mediaSocker = io.of('/media');
-
-  const { setSendTransport, deleteSendTransport, getAllSendTransports, getSendTransportById } = signal.SendTransportSignal();
-  const { setRecvTransport, deleteRecvTransport, getAllRecvTransports, getRecvTransportById } = signal.RecvTransportSignal();
-  const { setProducers, getProducersById, deleteProducers } = signal.ProducerSingal();
-  const consumers = new Map();
+  const peerStore = new PeerStore();
   mediaSocker.on('connection', (socket) => {
     console.log('Media Client connected:', socket.id);
-    socket.conn.on("upgrade", () => {
-      const upgradedTransport = socket.conn.transport.name; // in most cases, "websocket"
-    });
 
-    socket.on('getRtpCapabilities', (callback) => {
-      console.log("getRtpCapabilities called", callback);
-      if (!router) {
-        console.error('Router not initialized');
-        return;
+    socket.on('joinRoom', async (roomState, roomId, callback) => {
+      if (roomState == 'create') {
+        socket.data.roomId = generateSecureId();
       }
-      mediaSocker.to(socket.id).emit('rtpCapabilities', router.rtpCapabilities);
-      callback(router.rtpCapabilities);
-    });
+      else {
+        socket.data.roomId = roomId;
+      }
+      let router = await createRoom(socket.data.roomId, worker);
+      let lt = peerStore.getAllProducers(socket.data.roomId);
+      const existingProducers = peerStore.getAllProducers(socket.data.roomId)
+        .map(({ producer, socketId }) => ({
+          id: producer.id,
+          kind: producer.kind,
+          rtpParameters: producer.rtpParameters,
+          appData: producer.appData,
+          socketId, 
+        }));
+
+
+      callback({
+        roomId: socket.data.roomId,
+        routerRtpCapabilities: router.rtpCapabilities,
+        existingProducers,
+      });
+    })
     socket.on('createSendTransport', async () => {
+      const router = await createRoom(socket.data.roomId, worker);
       const transport = await router.createWebRtcTransport(
         {
           listenIps: [{
@@ -46,13 +62,13 @@ export default function MediaSocket(io, router) {
         dtlsParameters: transport.dtlsParameters,
         sctpParameters: transport.sctpParameters
       });
-      console.log("createTransport", transport.id);
-      setSendTransport(socket.id, transport);
+      peerStore.setSendTransport(socket.data.roomId, socket.id, transport);
+      //    setSendTransport(socket.id, transport);
     })
 
     socket.on('createReciveTransport', async (callback) => {
-      console.log("createReciveTransport called", socket.id);
       try {
+        const router = await createRoom(socket.data.roomId, worker);
         const transport = await router.createWebRtcTransport(
           {
             listenIps: [{
@@ -71,31 +87,37 @@ export default function MediaSocket(io, router) {
           iceCandidates: transport.iceCandidates,
           dtlsParameters: transport.dtlsParameters,
         });
-        setRecvTransport(socket.id, transport);
+        peerStore.setRecvTransport(socket.data.roomId, socket.id, transport);
+        //setRecvTransport(socket.id, transport);
       } catch (error) {
         callback({ error: "transport creation failed" });
       }
     })
     socket.on('sendTransportConnect', async (dtlsParameters) => {
-      console.log("called transportConnect")
 
-      const webRtcTransport = getSendTransportById(socket.id);
-      if (dtlsParameters) {
+      //      const webRtcTransport = getSendTransportById(socket.id);
+      const webRtcTransport = peerStore.getSendTransport(socket.data.roomId, socket.id);
+      if (webRtcTransport == null) {
+        console.error("WebRTC transport not found for socket:", socket.id);
+        return;
+      }
+      if (dtlsParameters && webRtcTransport != null) {
         await webRtcTransport.connect({ dtlsParameters });
       }
 
     })
     socket.on('recvTransportConnect', async (dtlsParameters) => {
-      console.log("called transportConnect")
 
-      const webRtcTransport = getRecvTransportById(socket.id);
+      //      const webRtcTransport = getRecvTransportById(socket.id);
+      const webRtcTransport = peerStore.getRecvTransport(socket.data.roomId, socket.id);
       if (dtlsParameters) {
         await webRtcTransport.connect({ dtlsParameters });
       }
 
     })
     socket.on('produce', async ({ transportId, kind, rtpParameters, appData }, callback) => {
-      const transport = getSendTransportById(socket.id);
+      //const transport = getSendTransportById(socket.id);
+      const transport = peerStore.getSendTransport(socket.data.roomId, socket.id);
       console.log("Produce called", transportId, kind, appData);
       try {
         const producer = await transport.produce({
@@ -103,12 +125,12 @@ export default function MediaSocket(io, router) {
           rtpParameters,
           appData,
         });
-        console.log("new producer", producer.id, "kind:", producer.kind);
         socket.broadcast.emit("newProducer", {
           producerId: producer.id,
           socketId: socket.id
         });
-        setProducers(producer.id, producer);
+        //setProducers(producer.id, producer);
+        peerStore.setProducer(socket.data.roomId, socket.id, producer.kind, producer);
         callback({ id: producer.id });
 
       } catch (err) {
@@ -117,18 +139,21 @@ export default function MediaSocket(io, router) {
     });
     socket.on("consume", async ({ producerId, clientRtpCapabilites, socketId }, callback) => {
       console.log("Consume called", producerId, socketId);
+      const router = await createRoom(socket.data.roomId, worker);
       if (!router.canConsume({ producerId, rtpCapabilities: clientRtpCapabilites })) {
-        console.error("Client cannot consume this producer");
+        console.error(socketId, "socket", socket.id, "Client cannot consume this producer");
         return callback({ error: "Cannot consume" });
       }
       try {
-        const consumer = await getRecvTransportById(socket.id).consume({
+        //const consumer = await getRecvTransportById(socket.id).consume({
+        const consumer = await peerStore.getRecvTransport(socket.data.roomId, socket.id).consume({
           producerId,
           rtpCapabilities: clientRtpCapabilites,
           paused: true
         });
 
-        consumers.set(consumer.id, consumer);
+        //consumers.set(consumer.id, consumer);
+        peerStore.setConsumer(socket.data.roomId, socket.id, consumer.id, consumer);
 
         console.log("Consumer created", consumer.id, "kind:", consumer.kind);
         callback({
@@ -143,11 +168,10 @@ export default function MediaSocket(io, router) {
 
     );
     socket.on("consumerResume", async ({ consumerId }) => {
-      console.log("Consumer Resume called", consumerId);
-      const consumer = consumers.get(consumerId);
+      //const consumer = consumers.get(consumerId);
+      const consumer = peerStore.getConsumer(socket.data.roomId, socket.id, consumerId);
       if (consumer) {
         await consumer.resume();
-        console.log("Consumer resumed:", consumerId);
       } else {
         console.error("Consumer not found:", consumerId);
       }
@@ -157,7 +181,8 @@ export default function MediaSocket(io, router) {
       console.log("Media Client disconnected:", socket.id);
 
       // Cleanup associated transports, producers, consumers, etc.
-      const transport = getSendTransportById(socket.id);
+      //const transport = getSendTransportById(socket.id);
+      const transport = peerStore.getSendTransport(socket.data.roomId, socket.id);
       if (transport) {
         try {
           transport.close(); // Gracefully close mediasoup transport
@@ -165,18 +190,20 @@ export default function MediaSocket(io, router) {
           console.warn("Failed to close transport:", e.message);
         }
       }
-      deleteSendTransport(socket.id);
+      //deleteSendTransport(socket.id);
+      peerStore.deleteSocket(socket.data.roomId, socket.id);
     });
   });
 
-  mediaSocker.on('getRtpCapabilities', (_, callback) => {
-    console.log("getRtpCapabilities called");
-    if (!router) {
-      console.error('Router not initialized');
-      return;
-    }
-    callback(router.rtpCapabilities);
-  });
+  //  mediaSocker.on('getRtpCapabilities', async (_, callback) => {
+  //      const router = await createRoom(socket.data.roomId, worker);
+  //    console.log("getRtpCapabilities called");
+  //    if (!router) {
+  //      console.error('Router not initialized');
+  //      return;
+  //    }
+  //    callback(router.rtpCapabilities);
+  //  });
   mediaSocker.on("hello", () => {
     console.log("hello from media socket")
   })

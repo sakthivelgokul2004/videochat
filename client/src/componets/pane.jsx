@@ -12,12 +12,15 @@ const Pane = ({
   socket,
   setOpen,
   isConsumer,
+  routerId,
+  setRouterId
 }) => {
   const [width, setWidth] = useState(window.innerWidth - window.innerWidth / 4);
   const [silderWidth, setSilderWidth] = useState((window.innerWidth - window.innerWidth / 4) / 2);
   console.log(window.innerWidth - window.innerWidth / 4);
   const currWindowWidth = window.innerWidth - window.innerWidth / 4;
   const isResizing = useRef(false);
+  console.log(room);
   useEffect(()=>{
     if (isOpen) {
       setSilderWidth(currWindowWidth / 2);
@@ -67,7 +70,7 @@ const Pane = ({
             }}
           >
           </div>
-          <Silder isConsumer={isConsumer} width={silderWidth} /></>
+          <Silder isConsumer={isConsumer} width={silderWidth} MessageSocket={socket} room={room} routerId={routerId} setRouterId={setRouterId} /></>
       }
     </div>
   )

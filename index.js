@@ -10,16 +10,11 @@ import { configDotenv } from "dotenv";
 import cookieParser from "cookie-parser"
 import handleSocket from "./socket/roomSocket.js";
 import {
-  version,
-  observer,
   createWorker,
-  getSupportedRtpCapabilities,
-  parseScalabilityMode
 } from "mediasoup";
 import MediaSocket from "./socket/mediaSocket.js";
 //@-ts-ignore
 let worker = createWorker();
-let MediasoupRouter = null;
 (async () => {
   try {
 
@@ -33,28 +28,9 @@ let MediasoupRouter = null;
     console.error('MediaSoup worker has died');
     process.exit(1);
   });
-  const mediaCodecs = [
-    {
-      kind: 'audio',
-      mimeType: 'audio/opus',
-      clockRate: 48000,
-      channels: 2,
-    },
-    {
-      kind: 'video',
-      mimeType: 'video/VP8',
-      clockRate: 90000,
-      parameters: {
-        'x-google-start-bitrate': 1000,
-      },
-    },
-  ]
 
   //@ts-ignore
-  MediasoupRouter = await worker.createRouter({
-    mediaCodecs,
-  });
-  MediaSocket(io, MediasoupRouter);
+  MediaSocket(io, worker);
 })();
 
 configDotenv();

@@ -8,11 +8,6 @@ export function MessageNavbar(props) {
   let room = props.room;
   let socket = props.socket;
   let socketId = props.socketId;
-  function startOfferCall(socketId) {
-    console.log(callDoc.id);
-    socket.emit("initiateCall", { room: callDoc.id, socketId: socketId });
-    navigate(`/VideoChat/${callDoc.id}/caller`);
-  }
 
   return (
     <>

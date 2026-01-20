@@ -81,6 +81,19 @@ function handleSocket(io) {
         Room.to(socket.id).emit("newMesage", { message, socketId: res.socketId });
       });
     });
+    socket.on("sendInvite", async (res) => {
+      console.log(res);
+      const userId = liveUserStore.getuserBySocketId(socket.id);
+      let cur = await User.findOne({ email: userId }).select(
+        "userName"
+      );
+      //console.log("invites",cur)
+      if (!cur) {
+        console.log("user not found");
+        return;
+      }
+      Room.to(res.to).emit("invite", {user:cur.userName, routerId: res.routerId });
+    })
     socket.on("disconnect", () => {
       liveUserStore.deleteuser(socket.id);
       BroadCasstLiveUser();

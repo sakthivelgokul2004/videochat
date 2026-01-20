@@ -9,11 +9,21 @@ import {
   VideoCameraIcon,
   VideoCameraSlashIcon,
 } from "@heroicons/react/24/solid";
-/** @typedef {import('mediasoup-client').Transport} Transport */
+/** @typedef {import('mediasoup-client').types.Transport} Transport */
+/** @typedef {import('mediasoup-client').types.Device} Device*/
 
-const Silder = (props) => {
+const Silder = ({
+  isConsumer,
+  width,
+  MessageSocket,
+  room,
+  routerId,
+  setRouterId,
+}) => {
   let [device, loading, error] = useDevice()
   const [routerRtpCapabilities, setRouterRtpCapabilities] = useState(null)
+
+  /** @type {[import('mediasoup-client').types.RtpCapabilities|undefined, Function]} */
   const [clientRtpCapabilites, setclientRtpCapabilites] = useState();
   /** @type {[Transport|undefined, Function]} */
   const [sendTransport, setSendTrasport] = useState();
@@ -21,10 +31,7 @@ const Silder = (props) => {
   const [recvTransports, setRecvTrasports] = useState([]);
   const [transportState, setTransportState] = useState(false);
   const [camState, setCamState] = useState(false);
-  const ref = useRef();
-  const Remoteref = useRef();
   const [streams, setStreams] = useState([]);
-  const { isConsumer } = props;
   const [callState, setCallState] = useState(true);
   const [mediaPopupVisible, setMediaPopupVisible] = useState(true);
   const [localStream, setLocalStream] = useState(null);
@@ -32,9 +39,6 @@ const Silder = (props) => {
     audio: false,
     video: false,
   });
-
-
-
   useEffect(() => {
     setSocketLoading(true);
     socket.on("connect", () => {
@@ -49,42 +53,41 @@ const Silder = (props) => {
     return () => {
     }
   }, [])
-  useEffect(() => {
-    socket.on("connect_error", (err) => {
-      // the reason of the error, for example "xhr poll error"
-      console.log("eroor", err);
-      console.log(err.message);
 
-      // some additional description, for example the status code of the initial HTTP response
-      console.log(err.description);
+  async function consumeProducer(producerId, socketId) {
+    if (socketId === socket.id) {
+      console.log("ignoring own producer");
+      return;
+    }
+    socket.emit("createReciveTransport", (transportparms) => {
+      try {
 
-      // some additional context, for example the XMLHttpRequest object
-      console.log(err.context);
+        const newRecvTransport = device.createRecvTransport(transportparms);
+        newRecvTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
+          socket.emit("recvTransportConnect", dtlsParameters);
+          callback();
+        });
+        socket.emit("consume", { producerId, clientRtpCapabilites, socketId }, async ({ id, kind, rtpParameters }) => {
+          console.log("consume", id, kind, rtpParameters);
+          const consumer = await newRecvTransport.consume({
+            id,
+            producerId,
+            kind,
+            rtpParameters
+          });
+          const stream = new MediaStream();
+          const { track } = consumer
+          stream.addTrack(track);
+          setStreams((prev) => [...prev, stream]);
+          setRecvTrasports((prev) => [...prev, newRecvTransport]);
+          socket.emit("consumerResume", { consumerId: id, });
+        });
+      } catch (error) {
+      console.log('Error creating receive transport:', error);
+      }
     });
-    console.log("socketloading ", socketLoading);
-    if (!routerRtpCapabilities) {
-      console.log("socket", socket);
 
-      socket.emit("getRtpCapabilities", async (cap) => {
-        if (!loading && device) {
-          console.log("got rtp capabilities", cap);
-          setRouterRtpCapabilities(cap)
-          device.load({ routerRtpCapabilities: cap }).then(() => {
-            if (device.canProduce("video")) {
-              console.log("can produce video")
-              setclientRtpCapabilites(device.rtpCapabilities);
-              socket.emit("createSendTransport", device.sctpCapabilities);
-            }
-          }).catch((err) => {
-            console.log("error", err)
-          })
-        }
-      })
-    }
-    return () => {
-      socket.off("rtpCapabilities");
-    }
-  }, [loading, routerRtpCapabilities, socketLoading])
+  }
 
   useEffect(() => {
     socket.on("sendTransport", (transportparms) => {
@@ -107,44 +110,7 @@ const Silder = (props) => {
       }
     })
     socket.on("newProducer", async ({ producerId, socketId }) => {
-      socket.emit("createReciveTransport", (transportparms) => {
-        console.log("new trrpoart, ", transportparms);
-        const newRecvTransport = device.createRecvTransport(transportparms);
-        newRecvTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
-          socket.emit("recvTransportConnect", dtlsParameters);
-          callback();
-        });
-        console.log("newRecvTransport", newRecvTransport);
-        socket.emit("consume", { producerId, clientRtpCapabilites, socketId }, async ({ id, kind, rtpParameters }) => {
-          const consumer = await newRecvTransport.consume({
-            id,
-            producerId,
-            kind,
-            rtpParameters
-          });
-          console.log("consumer", consumer);
-          const stream = new MediaStream();
-          const { track } = consumer
-          stream.addTrack(track);
-          console.log("stream", stream);
-         // Remoteref.current.onloadedmetadata = () => {
-         //   console.log("✅ video loaded");
-         //   Remoteref.current.play();
-         // };
-          setStreams((prev) => [...prev, stream]);
-          console.log("strems",streams);
-          setRecvTrasports((prev) => [...prev, newRecvTransport]);
-          socket.emit("consumerResume", { consumerId: id, });
-          console.log("consumed strem", stream);
-          console.log({
-            readyState: consumer.track.readyState,
-            muted: consumer.track.muted,
-            paused: consumer.paused,
-            closed: consumer.closed
-          });
-
-        });
-      });
+      await consumeProducer(producerId, socketId);
     });
 
     return () => {
@@ -168,46 +134,14 @@ const Silder = (props) => {
           rtpParameters,
           appData
         }, (response) => { callback({ id: response.id }) });
-        ;
+
       });
     }
 
   }, [camState, transportState, sendTransport])
-  async function inial() {
-    let localStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: {
-          min: 640,
-          max: 1920,
-        },
-        height: {
-          min: 400,
-          max: 1080,
-        }
-      }
-    },
-    );
-    const videoTrack = localStream.getVideoTracks()[0];
 
-    console.log("trsanpot is ", sendTransport);
-    if (sendTransport && videoTrack) {
-
-      try {
-        await sendTransport.produce({
-          track: videoTrack,
-          appData: { mediaTag: 'camera' }
-        });
-      } catch (err) {
-        console.error("produce error", err);
-      }
-    }
-    setStreams((prev) => [...prev, localStream]);
-
-    console.log("localstream", localStream);
-  }
 
   const handleGetMedia = async (state) => {
-    toggleMediaConstraint(state);
     try {
       const constraints = {
         audio: mediaConstraints.audio,
@@ -230,18 +164,61 @@ const Silder = (props) => {
   };
 
   useEffect(() => {
+    if (!mediaPopupVisible) {
+      let roomState = routerId === "" ? "create" : "join";
+
+      socket.emit(
+        "joinRoom",
+        roomState,
+        routerId,
+        async ({ roomId, routerRtpCapabilities, existingProducers }) => {
+          setRouterId(roomId);
+          if (roomState === "create") {
+            MessageSocket.emit("sendInvite", { to: room.socketId, routerId: roomId });
+          }
+
+          if (!loading && !device.loaded) {
+            console.log("got rtp capabilities", routerRtpCapabilities);
+            setRouterRtpCapabilities(routerRtpCapabilities);
+
+            try {
+              await device.load({ routerRtpCapabilities });
+              if (device.canProduce("video")) {
+                console.log("can produce video");
+                setclientRtpCapabilites(device.rtpCapabilities);
+                socket.emit("createSendTransport", device.sctpCapabilities);
+              }
+            } catch (err) {
+              console.error("error", err);
+            }
+          }
+          // after device.load(...)
+          console.log("existing", existingProducers);
+          if (!loading && device.loaded) {
+            if (existingProducers && existingProducers.length > 0) {
+              for (const { id, socketId } of existingProducers) {
+                console.log("consuming producer", id);
+                await consumeProducer(id, socketId);
+              }
+            }
+          }
+
+        }
+      );
+    }
+
     if (!mediaPopupVisible && localStream && sendTransport) {
       const videoTrack = localStream.getVideoTracks()[0];
       sendTransport
         .produce({
           track: videoTrack,
-          appData: { mediaTag: 'camera' }
+          appData: { mediaTag: "camera" },
         })
         .catch(console.error);
 
-      setStreams(prev => [localStream, ...prev]);
+      setStreams((prev) => [localStream, ...prev]);
     }
-  }, [mediaPopupVisible, localStream, sendTransport]);
+  }, [mediaPopupVisible, localStream, sendTransport, device, loading]);
 
   const toggleMediaConstraint = (type) => {
     setMediaConstraints((prev) => ({
@@ -252,7 +229,7 @@ const Silder = (props) => {
   return (
     <div
       className="relative h-full w-full flex flex-col p-4 gap-4 bg-waikawa-gray-950"
-      style={{ width: props.width }}
+      style={{ width: width }}
     >
       {/* 🎥 Media Access Card */}
       {mediaPopupVisible && (

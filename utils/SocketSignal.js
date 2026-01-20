@@ -21,6 +21,9 @@ function signal() {
     return () => subscribers.delete(fn);
 
   }
+  const getuserBySocketId = (socketid) => {
+    return user.get(socketid);
+  };
   const notify = () => {
     subscribers.forEach((fn) => fn(user));
   };
@@ -30,6 +33,7 @@ function signal() {
     setuser,
     getalluser,
     deleteuser,
+    getuserBySocketId,
     subscribe,
     notify
   }

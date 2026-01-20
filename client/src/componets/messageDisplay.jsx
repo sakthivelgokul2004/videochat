@@ -12,7 +12,7 @@ export default function Message(props) {
   const setOpen = props.setOpen;
   const isConsumer = props.isConsumer;
   useEffect(() => {
-    
+
     socket.on("newMesage", (val) => {
       console.log("newMessage", val);
       if (val.receiverId == "public") {
@@ -33,19 +33,22 @@ export default function Message(props) {
         <div className="flex-1">
           <a className="btn btn-ghost text-xl">{room.roomName}</a>
         </div>
-        <div className="flex-none">
-          <button className="btn btn-square btn-primary px-8 mx-4 text-base " onClick={()=>{
-            setOpen((prevs)=> !prevs )
-          }}>
-            call
-          </button>
-          <button className="btn btn-square btn-primary px-8 mx-4 text-base " onClick={()=>{
-            isConsumer((prev) => true);
-           setOpen((prev) => !prev); 
-          }}>
-           Cosumer
-          </button>
-        </div>
+        {
+          room.roomName !== "public" &&
+          <div className="flex-none">
+            <button className="btn btn-square btn-primary px-8 mx-4 text-base " onClick={() => {
+              setOpen((prevs) => !prevs)
+            }}>
+              call
+            </button>
+            <button className="btn btn-square btn-primary px-8 mx-4 text-base " onClick={() => {
+              isConsumer((prev) => true);
+              setOpen((prev) => !prev);
+            }}>
+              Cosumer
+            </button>
+          </div>
+        }
       </div>
       <div className="overflow-y-scroll flex-grow ">
         <Messages
