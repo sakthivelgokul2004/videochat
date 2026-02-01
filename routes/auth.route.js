@@ -1,7 +1,7 @@
 import Express from "express";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.Model.js";
-import { addUser, getUserDetail } from "../controller/authController.js";
+import { addUser } from "../controller/authController.js";
 import { refreshAccessToken } from "../utils/refreshAccessToken.js"
 let router = Express.Router();
 const client = new OAuth2Client(process.env.Client_ID);
@@ -25,7 +25,7 @@ router.get("/user", async (req, res) => {
         res.cookie('access_token', token.access_token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'Strict',
+          sameSite: 'strict',
           maxAge: 60 * 60 * 1000,
         });
       }
@@ -47,11 +47,16 @@ router.get("/user", async (req, res) => {
 }
 )
 router.get('/callback', async (req, res) => {
-  const { code } = req.query;
-  const redirectUri = `https://${req.get("host")}/api/auth/callback`;
+const codeParam = req.query.code;
+  const redirectUri = process.env.NODE_ENV === 'production' ? `https://${req.get("host")}/api/auth/callback` : `http://${req.get("host")}/api/auth/callback`;
+  console.log(redirectUri);
 
-//  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/callback`;
-  if (!code) {
+  //  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/callback`;
+  if (!process.env.Client_ID || !process.env.Client_SECRET) {
+    throw new Error('Google OAuth env variables missing');
+  }
+
+  if (typeof codeParam !== 'string') {
     return res.status(400).send('Authorization code not found.');
   }
   try {
@@ -63,7 +68,7 @@ router.get('/callback', async (req, res) => {
       body: new URLSearchParams({
         client_id: process.env.Client_ID,
         client_secret: process.env.Client_SECRET,
-        code: code,
+        code: codeParam,
         grant_type: 'authorization_code',
         redirect_uri: redirectUri,
       }),
@@ -73,7 +78,7 @@ router.get('/callback', async (req, res) => {
     res.cookie('access_token', tokens.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 1000,
     });
     const clientId = "321973348565-t6eh5frql84m4anaq9b3i82afbdguhfg.apps.googleusercontent.com";
@@ -96,7 +101,7 @@ router.get('/callback', async (req, res) => {
     res.cookie('refresh_token', tokens.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     const redirectUrl = `/success`
