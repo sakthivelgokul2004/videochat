@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useUserContex } from "../../contex/userContex";
-import { useRoomContex } from "../../contex/SocketContex";
 
 export function HandleMessage(props) {
   const [currMessage, setCurrMessage] = useState("");
