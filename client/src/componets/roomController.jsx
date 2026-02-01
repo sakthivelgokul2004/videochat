@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import { useRoomContex, useSocketContex } from "../contex/SocketContex";
 import { Contact } from "./contacts";
 
 export default function Room(props) {
   const socket = props.socket;
-  const room = props.room;
   const setroom = props.setRoom;
   const [liveUser, setLiveUser] = useState([]);
 

@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect,  useState } from "react";
 import Room from "./roomController";
 import { useUserContex } from "../contex/userContex";
 import socket from "../utils/messageSocket";
 import { MessageNavbar } from "./Messages/MessageNavbar";
-import Silder from "./silder";
-import ResizableSlider from "./ResizableSlider";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import Pane from "./pane";
