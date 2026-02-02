@@ -13,6 +13,38 @@ import { PeerStore } from "../utils/PeerStore.js";
 export default function MediaSocket(io, worker) {
   const mediaSocker = io.of('/media');
   const peerStore = new PeerStore();
+  let transportParms;
+  if (process.env.NODE_ENV === 'production') {
+    transportParms =
+    {
+      listenIps: [
+        {
+          ip: '0.0.0.0',               // bind internally
+          announcedIp: process.env.ANNOUNCED_IP
+        }
+      ],
+      enableUdp: true,
+      enableTcp: true,   // TCP helps if UDP is blocked
+      preferUdp: true,
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' }
+      ],
+    }
+  } else {
+    transportParms =
+    {
+      listenIps: [{
+        ip: '127.0.0.1',
+      }],
+      enableUdp: true,
+      enableTcp: false,
+      preferUdp: true,
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' } // <- works for localhost development
+      ],
+    }
+  }
+
   mediaSocker.on('connection', (socket) => {
     console.log('Media Client connected:', socket.id);
 
@@ -31,7 +63,7 @@ export default function MediaSocket(io, worker) {
           kind: producer.kind,
           rtpParameters: producer.rtpParameters,
           appData: producer.appData,
-          socketId, 
+          socketId,
         }));
 
 
@@ -43,18 +75,7 @@ export default function MediaSocket(io, worker) {
     })
     socket.on('createSendTransport', async () => {
       const router = await createRoom(socket.data.roomId, worker);
-      const transport = await router.createWebRtcTransport(
-        {
-          listenIps: [{
-            ip: '127.0.0.1',
-          }],
-          enableUdp: true,
-          enableTcp: false,
-          preferUdp: true,
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' } // <- works for localhost development
-          ],
-        })
+      const transport = await router.createWebRtcTransport(transportParms)
       mediaSocker.to(socket.id).emit('sendTransport', {
         id: transport.id,
         iceParameters: transport.iceParameters,
@@ -69,18 +90,7 @@ export default function MediaSocket(io, worker) {
     socket.on('createReciveTransport', async (callback) => {
       try {
         const router = await createRoom(socket.data.roomId, worker);
-        const transport = await router.createWebRtcTransport(
-          {
-            listenIps: [{
-              ip: '127.0.0.1',
-            }],
-            enableUdp: true,
-            enableTcp: false,
-            preferUdp: true,
-            iceServers: [
-              { urls: 'stun:stun.l.google.com:19302' } // <- works for localhost development
-            ],
-          })
+        const transport = await router.createWebRtcTransport(transportParms)
         callback({
           id: transport.id,
           iceParameters: transport.iceParameters,
