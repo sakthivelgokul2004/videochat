@@ -19,15 +19,36 @@ let worker = createWorker();
   try {
 
     worker = await createWorker();
+    let ip ="127.0.0.1";
+    if( process.env.PUBLIC_IP){
+      ip="0.0.0.0";
+    }
+    const webRtcServer = await worker.createWebRtcServer({
+      listenInfos: [
+        {
+          protocol: "udp",
+          ip: ip, // Listen on all available network interfaces
+          announcedAddress: process.env.PUBLIC_IP || "127.0.0.1", // IMPORTANT: Use your Public IP here
+          port: 4444, // The single port for all traffic
+        },
+        {
+          protocol: "tcp",
+          ip: ip, // Listen on all available network interfaces
+          announcedAddress: process.env.PUBLIC_IP || "127.0.0.1",
+          port: 4444,
+        },
+      ],
+    });
+    worker.appData.webRtcServer = webRtcServer;
+  //@ts-ignore
+    worker.on('died', () => {
+      console.error('MediaSoup worker has died');
+      process.exit(1);
+    });
   } catch (error) {
 
     console.log(error)
   }
-  //@ts-ignore
-  worker.on('died', () => {
-    console.error('MediaSoup worker has died');
-    process.exit(1);
-  });
 
   //@ts-ignore
   MediaSocket(io, worker);

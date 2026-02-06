@@ -59,21 +59,28 @@ export class PeerStore {
    */
   setRecvTransport(roomId, socketId, transport) {
     this.#ensure(this.recvTransports, roomId);
+
+    const existing = this.recvTransports.get(roomId).get(socketId);
+    if (existing) {
+      transport.close(); // defensive
+      return existing;
+    }
+
     this.recvTransports.get(roomId).set(socketId, transport);
+    return transport;
   }
 
   /**
    * Store a producer (by kind) for a given room and socket.
    * @param {string} roomId
    * @param {string} socketId
-   * @param {string} kind - 'audio' | 'video'
    * @param {Producer} producer
    */
-  setProducer(roomId, socketId, kind, producer) {
+  setProducer(roomId, socketId, producer) {
     this.#ensure(this.producers, roomId);
     const socketMap = this.producers.get(roomId);
     if (!socketMap.has(socketId)) socketMap.set(socketId, new Map());
-    socketMap.get(socketId).set(kind, producer);
+    socketMap.get(socketId).set(producer.id, producer);
   }
 
   /**
@@ -118,11 +125,10 @@ export class PeerStore {
    * Get a specific producer by kind for a socket in a room.
    * @param {string} roomId
    * @param {string} socketId
-   * @param {string} kind
    * @returns {Producer | undefined}
    */
-  getProducer(roomId, socketId, kind) {
-    return this.producers.get(roomId)?.get(socketId)?.get(kind);
+  getProducer(roomId, socketId, producerId) {
+    return this.producers.get(roomId)?.get(socketId)?.get(producerId);
   }
 
   /**
@@ -136,11 +142,11 @@ export class PeerStore {
     return this.consumers.get(roomId)?.get(socketId)?.get(consumerId);
   }
 
-/**
- * Get all producers across all sockets in a room.
- * @param {string} roomId
- * @returns {{ producer: Producer, socketId: string }[]}
- */
+  /**
+   * Get all producers across all sockets in a room.
+   * @param {string} roomId
+   * @returns {{ producer: Producer, socketId: string }[]}
+   */
   getAllProducers(roomId) {
     const roomMap = this.producers.get(roomId);
     if (!roomMap) return [];

@@ -8,15 +8,12 @@ const client = new OAuth2Client(process.env.Client_ID);
 router.post("/addUser", addUser);
 router.get("/user", async (req, res) => {
   let body = req.cookies
-  console.log("logging")
   if (body.access_token) {
-    console.log("had access token")
     try {
       const info = await client.getTokenInfo(body.access_token)
-      console.log(info.email)
+      //console.log(info.email)
       if (info.email) {
         let doc = await User.findOne({ email: info.email });
-        console.log(doc)
         res.send(doc);
       }
       else if (body) {
@@ -49,7 +46,7 @@ router.get("/user", async (req, res) => {
 router.get('/callback', async (req, res) => {
 const codeParam = req.query.code;
   const redirectUri = process.env.NODE_ENV === 'production' ? `https://${req.get("host")}/api/auth/callback` : `http://${req.get("host")}/api/auth/callback`;
-  console.log(redirectUri);
+  //console.log(redirectUri);
 
   //  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/callback`;
   if (!process.env.Client_ID || !process.env.Client_SECRET) {
@@ -74,7 +71,7 @@ const codeParam = req.query.code;
       }),
     });
     const tokens = await response.json();
-    console.log('Tokens received:', tokens);
+    //console.log('Tokens received:', tokens);
     res.cookie('access_token', tokens.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -88,7 +85,6 @@ const codeParam = req.query.code;
     });
 
     const payload = ticket.getPayload();
-    console.log('User ID:', payload['sub']);
 
     let result = User.create({
       userName: payload.name,
@@ -96,7 +92,6 @@ const codeParam = req.query.code;
       email: payload.email,
     });
     (await result).save();
-    console.log(result)
 
     res.cookie('refresh_token', tokens.refresh_token, {
       httpOnly: true,

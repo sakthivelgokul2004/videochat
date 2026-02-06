@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 const ActiveConnections = ({ streams }) => {
   const videoRefs = useRef([]);
 
-  console.log("ActiveConnections streams", streams);
+  //console.log("ActiveConnections streams", streams);
   useEffect(() => {
     // Trim or expand videoRefs to match streams
     videoRefs.current = videoRefs.current.slice(0, streams.length);

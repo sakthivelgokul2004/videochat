@@ -16,9 +16,9 @@ export default function Dashboard() {
   useEffect(() => {
     socket.emit("setOnline", user.email);
     socket.on("invite", (res) => {
-      console.log("invite", res);
+//      console.log("invite", res);
       setRouterId(res.routerId);
-      console.log(res.user);
+ //     console.log(res.user);
       showInviteToast(res.user, res.routerId);
     })
     setRoom((prevs) => ({ ...prevs, roomName: "public" }));

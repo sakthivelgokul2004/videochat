@@ -1,22 +1,21 @@
 import { randomBytes } from 'crypto';
 const rooms = new Map(); // roomId -> roomData
 
-  const mediaCodecs = [
-    {
-      kind: 'audio',
-      mimeType: 'audio/opus',
-      clockRate: 48000,
-      channels: 2,
+const mediaCodecs = [
+  {
+    kind: 'audio',
+    mimeType: 'audio/opus',
+    clockRate: 48000,
+    channels: 2,
+  },
+  {
+    kind: 'video',
+    mimeType: 'video/VP8',
+    clockRate: 90000,
+    parameters: {
     },
-    {
-      kind: 'video',
-      mimeType: 'video/VP8',
-      clockRate: 90000,
-      parameters: {
-        'x-google-start-bitrate': 1000,
-      },
-    },
-  ]
+  },
+]
 /** @typedef {import("socket.io").Server} SocketIOServer 
  * @typedef {import("mediasoup").types.Worker} Worker
  **/
@@ -26,7 +25,7 @@ const rooms = new Map(); // roomId -> roomData
   * @param {Worker} worker
   * @returns {Promise<import("mediasoup").types.Router>}
  */
-export async function createRoom(roomId, worker ) {
+export async function createRoom(roomId, worker) {
   if (rooms.has(roomId)) return rooms.get(roomId);
 
   const router = await worker.createRouter({ mediaCodecs });

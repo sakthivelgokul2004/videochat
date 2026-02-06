@@ -14,15 +14,13 @@ function handleSocket(io) {
     if (user.length > 0) {
       let userData = [];
       userData = user.map(async (user) => {
-        console.log("user", user);
         let cur = await User.findOne({ email: user.userid }).select(
           " userName photoUrl email"
         );
-        console.log(cur)
+//        console.log(cur)
         return { user: cur, socketId: user.socketid };
       })
       userData = await Promise.all(userData);
-      console.log("io")
       return userData;
     }
   }

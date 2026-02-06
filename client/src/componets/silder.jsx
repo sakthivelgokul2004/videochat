@@ -24,17 +24,19 @@ const Silder = ({
   const [routerRtpCapabilities, setRouterRtpCapabilities] = useState(null)
 
   /** @type {[import('mediasoup-client').types.RtpCapabilities|undefined, Function]} */
-  const [clientRtpCapabilites, setclientRtpCapabilites] = useState();
   /** @type {[Transport|undefined, Function]} */
   const [sendTransport, setSendTrasport] = useState();
   const [socketLoading, setSocketLoading] = useState(true);
-  const [recvTransports, setRecvTrasports] = useState([]);
+  /** @type {[Transport|undefined, Function]} */
+  const [recvTransports, setRecvTrasports] = useState();
   const [transportState, setTransportState] = useState(false);
   const [camState, setCamState] = useState(false);
   const [streams, setStreams] = useState([]);
+  const [deviceStarted, setDeviceStarted] = useState(false);
   const [callState, setCallState] = useState(true);
   const [mediaPopupVisible, setMediaPopupVisible] = useState(true);
   const [localStream, setLocalStream] = useState(null);
+  const [pendingProducers, setPendingProducers] = useState([]);
   const [mediaConstraints, setMediaConstraints] = useState({
     audio: false,
     video: false,
@@ -54,41 +56,40 @@ const Silder = ({
     }
   }, [])
 
-  async function consumeProducer(producerId, socketId) {
-    if (socketId === socket.id) {
-      console.log("ignoring own producer");
+  const consumeProducer = async (producerId, socketId, currentRecvTransport) => {
+    if (socketId === socket.id) return;
+
+    // Use the transport passed in or the state transport
+    const transport = currentRecvTransport;
+
+    if (!transport || !device.loaded) {
+      console.warn("Chrome Warning: Transport not ready yet.", transport);
       return;
     }
-    socket.emit("createReciveTransport", (transportparms) => {
-      try {
+    const rtpCapabilities = device.rtpCapabilities;
+    console.log("rtp", rtpCapabilities);
+    socket.emit("consume", {
+      producerId,
+      rtpCapabilities, 
+      socketId
 
-        const newRecvTransport = device.createRecvTransport(transportparms);
-        newRecvTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
-          socket.emit("recvTransportConnect", dtlsParameters);
-          callback();
+    }, async ({ id, kind, rtpParameters }) => {
+      try {
+        const consumer = await transport.consume({
+          id,
+          producerId,
+          kind,
+          rtpParameters
         });
-        socket.emit("consume", { producerId, clientRtpCapabilites, socketId }, async ({ id, kind, rtpParameters }) => {
-          console.log("consume", id, kind, rtpParameters);
-          const consumer = await newRecvTransport.consume({
-            id,
-            producerId,
-            kind,
-            rtpParameters
-          });
-          const stream = new MediaStream();
-          const { track } = consumer
-          stream.addTrack(track);
-          setStreams((prev) => [...prev, stream]);
-          setRecvTrasports((prev) => [...prev, newRecvTransport]);
-          socket.emit("consumerResume", { consumerId: id, });
-        });
-      } catch (error) {
-      console.log('Error creating receive transport:', error);
+
+        const stream = new MediaStream([consumer.track]);
+        setStreams((prev) => [...prev, stream]);
+        socket.emit("consumerResume", { consumerId: id });
+      } catch (err) {
+        console.error("Chrome SDP Error:", err.message);
       }
     });
-
-  }
-
+  };
   useEffect(() => {
     socket.on("sendTransport", (transportparms) => {
       try {
@@ -100,8 +101,33 @@ const Silder = ({
             dtlsParameters: transportparms.dtlsParameters,
             sctpParameters: transportparms.sctpParameters
           })
+          console.log("create send transport");
+          transport.on("connect", ({ dtlsParameters }, callback, errback) => {
+            socket.emit(
+              "sendTransportConnect",
+              dtlsParameters,
+              () => {
+                console.log("Server transport connected, now client can proceed");
+                callback();
+              }
+            );
+          });
+          console.log("transport id", transport.id);
+          transport.on("produce", async ({ kind, rtpParameters, appData }, callback, errback) => {
+            console.log("produce", kind, rtpParameters, appData, transport.id);
+            socket.emit("produce", {
+              transportId: transport.id,
+              kind,
+              rtpParameters,
+              appData
+            }, (response) => { callback({ id: response.id }) });
+
+          });
           setTransportState(true);
-          setSendTrasport(transport);
+          if (sendTransport == null) {
+            setSendTrasport(transport);
+            console.log("transport create ");
+          }
         }
 
       } catch (error) {
@@ -110,33 +136,35 @@ const Silder = ({
       }
     })
     socket.on("newProducer", async ({ producerId, socketId }) => {
-      await consumeProducer(producerId, socketId);
+      console.log("new Proceduer");
+      if (socketId === socket.id) return;
+      await consumeProducer(producerId, socketId, recvTransports);
     });
+    console.log("create rec ", device, sendTransport, recvTransports);
+    if (device && device.loaded && recvTransports == undefined) {
+      console.log("create rec transport");
+      socket.emit("createReciveTransport", (transportparms) => {
+        try {
+          const newRecvTransport = device.createRecvTransport(transportparms);
+          newRecvTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
+            socket.emit("recvTransportConnect", dtlsParameters);
+            callback();
+          });
+          setRecvTrasports(newRecvTransport);
+        } catch (error) {
+          console.log('Error creating receive transport:', error);
+        }
+      });
+    }
 
     return () => {
       socket.off("newProducer");
       socket.off("rtpCapabilities");
 
     }
-  }, [loading, device, clientRtpCapabilites, recvTransports, sendTransport, socketLoading])
+  }, [loading, device, recvTransports, sendTransport, socketLoading])
 
   useEffect(() => {
-    if (sendTransport != null) {
-      sendTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
-        socket.emit("sendTransportConnect", dtlsParameters);
-        callback();
-      });
-      sendTransport.on("produce", async ({ kind, rtpParameters, appData }, callback, errback) => {
-        console.log("produce", kind, rtpParameters, appData);
-        socket.emit("produce", {
-          transportId: sendTransport.id,
-          kind,
-          rtpParameters,
-          appData
-        }, (response) => { callback({ id: response.id }) });
-
-      });
-    }
 
   }, [camState, transportState, sendTransport])
 
@@ -177,48 +205,64 @@ const Silder = ({
             MessageSocket.emit("sendInvite", { to: room.socketId, routerId: roomId });
           }
 
-          if (!loading && !device.loaded) {
-            console.log("got rtp capabilities", routerRtpCapabilities);
-            setRouterRtpCapabilities(routerRtpCapabilities);
+          try {
+            if (!loading && !device.loaded && !deviceStarted) {
+              setRouterRtpCapabilities(routerRtpCapabilities);
+              setDeviceStarted(true);
+              try {
+                await device.load({ routerRtpCapabilities });
+                if (device.canProduce("video")) {
+                  console.log("can produce video");
+                  socket.emit("createSendTransport", device.sctpCapabilities);
+                }
+                if (existingProducers && existingProducers.length > 0) {
+                  setPendingProducers(existingProducers);
+                }
+              } catch (err) {
+                console.error("error", err);
+                setDeviceStarted(false);
+              }
+            }
 
-            try {
-              await device.load({ routerRtpCapabilities });
-              if (device.canProduce("video")) {
-                console.log("can produce video");
-                setclientRtpCapabilites(device.rtpCapabilities);
-                socket.emit("createSendTransport", device.sctpCapabilities);
-              }
-            } catch (err) {
-              console.error("error", err);
-            }
-          }
-          // after device.load(...)
-          console.log("existing", existingProducers);
-          if (!loading && device.loaded) {
-            if (existingProducers && existingProducers.length > 0) {
-              for (const { id, socketId } of existingProducers) {
-                console.log("consuming producer", id);
-                await consumeProducer(id, socketId);
-              }
-            }
+          } catch (error) {
+
+            console.log(error);
           }
 
         }
       );
     }
 
-    if (!mediaPopupVisible && localStream && sendTransport) {
-      const videoTrack = localStream.getVideoTracks()[0];
-      sendTransport
-        .produce({
-          track: videoTrack,
-          appData: { mediaTag: "camera" },
-        })
-        .catch(console.error);
+  }, [mediaPopupVisible, sendTransport, device, loading]);
+  useEffect(() => {
+    if (!localStream || !sendTransport) return;
 
-      setStreams((prev) => [localStream, ...prev]);
+    const track = localStream.getVideoTracks()[0];
+    if (!track) return;
+    console.log("working");
+    console.log("transport id", sendTransport.id);
+    sendTransport.produce({
+      track,
+      appData: { mediaTag: "camera" }
+    }).catch(console.error);
+    setStreams((prev) => [localStream, ...prev]);
+
+  }, [localStream, sendTransport,]);
+
+  useEffect(() => {
+    if (recvTransports && device.loaded && pendingProducers.length > 0) {
+      const consumeAllPending = async () => {
+        console.log("Draining pending producers:", pendingProducers.length);
+
+        for (const p of pendingProducers) {
+          await consumeProducer(p.id, p.socketId, recvTransports);
+        }
+        setPendingProducers([]);
+      };
+
+      consumeAllPending();
     }
-  }, [mediaPopupVisible, localStream, sendTransport, device, loading]);
+  }, [recvTransports, device, pendingProducers]);
 
   const toggleMediaConstraint = (type) => {
     setMediaConstraints((prev) => ({

@@ -8,14 +8,14 @@ export default function Room(props) {
 
   useEffect(() => {
     socket.on("getUser", async (lives) => {
-      console.log("getUser",lives);
-      console.log(socket.id);
+//      console.log("getUser",lives);
+//      console.log(socket.id);
       lives = lives.filter((obj) => obj.socketId != socket.id);
       setLiveUser((prevs) => [...lives]);
     });
     return () => socket.off("getUser");
   }, []);
-console.log("liveUser:", liveUser);
+//console.log("liveUser:", liveUser);
   function changeRoom(para, SocketId) {
     setroom((prevs) => ({ ...prevs, socketId: SocketId, roomName: para }));
   }

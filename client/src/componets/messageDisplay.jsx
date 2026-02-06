@@ -16,9 +16,9 @@ export default function Message(props) {
     socket.on("newMesage", (val) => {
       console.log("newMessage", val);
       if (val.receiverId == "public") {
-        console.log("on messageDisplay" + val);
+//        console.log("on messageDisplay" + val);
         setPublicMessage((prevs) => [...prevs, val]);
-        console.log("on messageDisplay" + val);
+ //       console.log("on messageDisplay" + val);
       }
       setPrivateMessage((prevs) => [...prevs, val]);
     });

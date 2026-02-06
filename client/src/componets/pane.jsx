@@ -35,10 +35,10 @@ const Pane = ({
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing.current) return;
-      console.log("width", width);
-      console.log("silderwidth", silderWidth);
-
-      console.log("client", e.clientX);
+//      console.log("width", width);
+//      console.log("silderwidth", silderWidth);
+//
+//      console.log("client", e.clientX);
       let newSilderWidth = e.clientX;
       let newWidth = currWindowWidth - e.clientX;
       if (newWidth >= minWidth && newWidth <= maxWidth) {

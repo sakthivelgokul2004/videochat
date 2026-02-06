@@ -15,8 +15,6 @@ async function getUserDetail(req, res) {
   let body = req.body;
   if (body.length) {
     let doc = await User.findOne({ email: body[0] });
-    console.log(doc);
-    console.log(body.length);
     res.json(doc);
   }
 }
