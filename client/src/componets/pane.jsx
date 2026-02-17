@@ -13,7 +13,9 @@ const Pane = ({
   setOpen,
   isConsumer,
   routerId,
-  setRouterId
+  setRouterId,
+  isNavbarOpen,
+  setIsNavbarOpen
 }) => {
   const [width, setWidth] = useState(window.innerWidth - window.innerWidth / 4);
   const [silderWidth, setSilderWidth] = useState((window.innerWidth - window.innerWidth / 4) / 2);
@@ -21,24 +23,21 @@ const Pane = ({
   const currWindowWidth = window.innerWidth - window.innerWidth / 4;
   const isResizing = useRef(false);
   console.log(room);
-  useEffect(()=>{
+  useEffect(() => {
     if (isOpen) {
       setSilderWidth(currWindowWidth / 2);
       setWidth(currWindowWidth / 2);
     }
-    else{
+    else {
       setSilderWidth(0);
       setWidth(currWindowWidth);
     }
 
-  },[isOpen])
+  }, [isOpen])
   useEffect(() => {
+    if (window.innerWidth < 640) return;
     const handleMouseMove = (e) => {
       if (!isResizing.current) return;
-//      console.log("width", width);
-//      console.log("silderwidth", silderWidth);
-//
-//      console.log("client", e.clientX);
       let newSilderWidth = e.clientX;
       let newWidth = currWindowWidth - e.clientX;
       if (newWidth >= minWidth && newWidth <= maxWidth) {
@@ -59,21 +58,64 @@ const Pane = ({
     };
   }, [minWidth, maxWidth]);
   return (
-    <div className='flex flex-row'>
-      <Message room={room} socket={socket} setRoom={setRoom} setOpen={setOpen} isConsumer={isConsumer} width={width} />
-      {isOpen &&
-        <>
-          <div
-            className='w-4 border-border cursor-ew-resize '
-            onMouseDown={() => {
-              isResizing.current = true;
-            }}
-          >
-          </div>
-          <Silder isConsumer={isConsumer} width={silderWidth} MessageSocket={socket} room={room} routerId={routerId} setRouterId={setRouterId} /></>
-      }
+    <div className="flex flex-row h-full w-full overflow-hidden">
+
+      {/* MESSAGE SECTION */}
+      <div
+        style={{ width: window.innerWidth < 640 ? '100%' : `${width}px` }}
+        className={`${isOpen && 'hidden sm:block'} h-full transition-all`}
+      >
+        <Message
+          room={room}
+          socket={socket}
+          setRoom={setRoom}
+          setOpen={setOpen}
+          setIsNavbarOpen={setIsNavbarOpen}
+          isConsumer={isConsumer}
+          width="100%"
+        />
+      </div>
+
+      {/* RESIZER BAR: Desktop Only */}
+      {isOpen && (
+        <div
+          className="hidden sm:block w-1 bg-border cursor-ew-resize hover:bg-primary transition-colors"
+          onMouseDown={() => { isResizing.current = true; }}
+        />
+      )}
+
+      {/* SLIDER SECTION (Video/Info) */}
+      {isOpen && (
+        <div
+          style={{ width: window.innerWidth < 640 ? '100%' : `${silderWidth}px` }}
+          className="h-full bg-base-200"
+        >
+          <Silder
+            isConsumer={isConsumer}
+            width="100%"
+            MessageSocket={socket}
+            room={room}
+            routerId={routerId}
+            setRouterId={setRouterId}
+          />
+        </div>
+      )}
     </div>
   )
 }
 
 export default Pane
+//<div className='flex flex-row'>
+//  <Message room={room} socket={socket} setRoom={setRoom} setOpen={setOpen} isConsumer={isConsumer} width={width} />
+//  {isOpen &&
+//    <>
+//      <div
+//        className='w-4 border-border cursor-ew-resize '
+//        onMouseDown={() => {
+//          isResizing.current = true;
+//        }}
+//      >
+//      </div>
+//      <Silder isConsumer={isConsumer} width={silderWidth} MessageSocket={socket} room={room} routerId={routerId} setRouterId={setRouterId} /></>
+//  }
+//</div>

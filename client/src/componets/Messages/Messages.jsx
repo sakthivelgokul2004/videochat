@@ -3,7 +3,8 @@ import { PrivateMessages } from "./PrivateMessage";
 import { PublicMessage } from "./publicMessage";
 
 export function Messages(props) {
-  const user = useUserContex();
+  const [user,setUser] = useUserContex();
+  console.log("user",user);
   let Messages = props.publicMessages;
   console.log("Messages" + props);
   let roomName = props.RoomName;
@@ -30,14 +31,14 @@ export function Messages(props) {
 
   if (roomName!= "public" && socketId != 0) {
     let currentRoomMessage = getMessagesBySocketId(privateMessage, socketId);
-    console.log(currentRoomMessage);
     return (
       <>
         {currentRoomMessage.length
           ? currentRoomMessage.map((obj) => {
+            console.log(obj)
               return (
                 <>
-                  <PrivateMessages message={obj.message} user={user.email} />
+                  <PrivateMessages message={obj.message} userMail={user.email} />
                 </>
               );
             })

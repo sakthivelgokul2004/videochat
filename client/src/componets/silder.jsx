@@ -70,7 +70,7 @@ const Silder = ({
     console.log("rtp", rtpCapabilities);
     socket.emit("consume", {
       producerId,
-      rtpCapabilities, 
+      rtpCapabilities,
       socketId
 
     }, async ({ id, kind, rtpParameters }) => {

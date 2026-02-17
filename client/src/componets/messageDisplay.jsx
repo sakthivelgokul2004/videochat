@@ -5,20 +5,13 @@ import { Messages } from "./Messages/Messages";
 export default function Message(props) {
   const [publicMessages, setPublicMessage] = useState([]);
   const [privateMessages, setPrivateMessage] = useState([]);
-  const socket = props.socket;
-  let room = props.room;
-  const width = props.width;
-  const setRoom = props.setRoom;
-  const setOpen = props.setOpen;
-  const isConsumer = props.isConsumer;
+  const { socket, room, width, setOpen, isConsumer, setIsNavbarOpen } = props;
   useEffect(() => {
 
     socket.on("newMesage", (val) => {
       console.log("newMessage", val);
       if (val.receiverId == "public") {
-//        console.log("on messageDisplay" + val);
         setPublicMessage((prevs) => [...prevs, val]);
- //       console.log("on messageDisplay" + val);
       }
       setPrivateMessage((prevs) => [...prevs, val]);
     });
@@ -29,9 +22,22 @@ export default function Message(props) {
 
   return (
     <div className="size  h-screen flex flex-col" style={{ width: width }}>
-      <div className="navbar bg-base-100">
+      <div className="navbar bg-base-100 border-b border-border shadow-sm">
+
+        {/* MOBILE TOGGLE BUTTON: Opens the Room List Sidebar */}
+        <div className="flex-none sm:hidden">
+          <button
+            className="btn  btn-ghost"
+            onClick={() => setIsNavbarOpen(true)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="inline-block w-6 h-6 stroke-current">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+
         <div className="flex-1">
-          <a className="btn btn-ghost text-xl">{room.roomName}</a>
+          <a className="btn btn-ghost text-xl truncate">{room.roomName}</a>
         </div>
         {
           room.roomName !== "public" &&
@@ -40,12 +46,6 @@ export default function Message(props) {
               setOpen((prevs) => !prevs)
             }}>
               call
-            </button>
-            <button className="btn btn-square btn-primary px-8 mx-4 text-base " onClick={() => {
-              isConsumer((prev) => true);
-              setOpen((prev) => !prev);
-            }}>
-              Cosumer
             </button>
           </div>
         }

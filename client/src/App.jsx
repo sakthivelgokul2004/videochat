@@ -1,33 +1,30 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { LoginSuccess } from "./componets/loginSucces"
 import { useAuthContex } from "./contex/userContex";
 import ProtectedRoute from "./componets/proctedRoute";
 import Home from "./pages/Home";
+import LoginSuccess from "./componets/loginSucces";
 import Dashboard from "./componets/dashboard";
 import Loading from "./pages/loading";
+import { lazy, Suspense } from "react";
+import { useEffect } from "react";
 function App() {
   const [auth, setAuth, loading] = useAuthContex();
   if (loading) {
-    return <Loading/>;
+    return <Loading />;
   }
   console.log("auth:", auth);
   return (
     <>
-      <div className="h-screen w-screen overflow-hidden">
+      <div className="h-dvh w-dvw overflow-hidden">
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Dashboard/>
-              </ProtectedRoute>}
-            />
-            <Route
-              path="/dashboard"
-              element={<Dashboard/>}
-            />
-            <Route path="/test" element={<Dashboard test={true}/>} />
-            <Route path="/home" element={<Home setAuth={setAuth}/>} />
-            <Route path="/success" element={<LoginSuccess />} />
+            <Route path="/home" element={<Home setAuth={setAuth} />} />
+            <Route element={<ProtectedRoute />}>
+              {/* Everything inside here requires auth */}
+              <Route path="/" element={<Navigate to="/dashboard" />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Route>
           </Routes>
         </BrowserRouter>
       </div>
@@ -37,7 +34,3 @@ function App() {
 
 export default App;
 
-// <Route
-//   path="/VideoChat/:room?/:state"
-//   element={<VideoChat />}
-// />

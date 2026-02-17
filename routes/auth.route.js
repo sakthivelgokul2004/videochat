@@ -99,7 +99,7 @@ const codeParam = req.query.code;
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    const redirectUrl = `/success`
+    const redirectUrl = `/dashboard`
     res.redirect(redirectUrl);
 
   } catch (error) {

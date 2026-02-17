@@ -20,25 +20,36 @@ const ActiveConnections = ({ streams }) => {
     });
   }, [streams]);
 
+  const getGridLayout = (count) => {
+    if (count === 1) return "grid-cols-1 max-w-4xl";
+    if (count === 2) return "grid-cols-1 sm:grid-cols-2 max-w-6xl";
+    if (count <= 4) return "grid-cols-2 max-w-6xl";
+    return "grid-cols-2 lg:grid-cols-3 max-w-7xl";
+  };
+
   return (
-    <div
-      className="grid w-full h-full gap-4 p-4 auto-rows-fr"
-      style={{
-        gridTemplateColumns: `repeat(auto-fit, minmax(240px, 1fr))`,
-      }}
-    >
-      {streams.map((_, index) => (
-        <video
-          key={index}
-          ref={(el) => {
-            videoRefs.current[index] = el;
-          }}
-          autoPlay
-          playsInline
-          muted={false}
-          className="w-full h-full object-cover rounded-2xl shadow-lg"
-        />
-      ))}
+    <div className="w-full h-full flex items-center justify-center bg-base-300 p-4 overflow-hidden">
+      <div
+        className={`grid gap-4 w-full h-fit mx-auto ${getGridLayout(streams.length)}`}
+      >
+        {streams.map((_, index) => (
+          <div
+            key={index}
+            className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+          >
+            <video
+              ref={(el) => (videoRefs.current[index] = el)}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover" // Ensures the video fills the 16:9 box
+            />
+            {/* Optional Overlay for name/status */}
+            <div className="absolute bottom-3 left-3 bg-black/50 px-3 py-1 rounded-md text-white text-xs">
+              Participant {index + 1}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

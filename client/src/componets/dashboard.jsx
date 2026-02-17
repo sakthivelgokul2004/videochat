@@ -1,4 +1,4 @@
-import { useEffect,  useState } from "react";
+import { useEffect, useState } from "react";
 import Room from "./roomController";
 import { useUserContex } from "../contex/userContex";
 import socket from "../utils/messageSocket";
@@ -12,13 +12,11 @@ export default function Dashboard() {
   const [isOpen, setIsOpen] = useState(false);
   const [isConsumer, setConsumer] = useState(false);
   const [routerId, setRouterId] = useState("");
-  const notify = () => toast('Here is your toast.');
+  const [isNavbarOpen, setIsNavbarOpen] = useState(false);
   useEffect(() => {
     socket.emit("setOnline", user.email);
     socket.on("invite", (res) => {
-//      console.log("invite", res);
       setRouterId(res.routerId);
- //     console.log(res.user);
       showInviteToast(res.user, res.routerId);
     })
     setRoom((prevs) => ({ ...prevs, roomName: "public" }));
@@ -64,16 +62,28 @@ export default function Dashboard() {
     );
   };
   return (
-    <div className="relative flex w-screen h-screen ">
-      <div className="w-1/4">
+    <div className="relative flex  flex-col sm:flex-row w-dvw h-dvh ">
+      <div className={`
+      ${isNavbarOpen ? 'translate-x-0' : '-translate-x-full'} 
+      sm:translate-x-0 transition-transform duration-300 ease-in-out
+      fixed sm:relative z-30 w-3/4 sm:w-1/4 h-full bg-white border-r
+    `}>
         <MessageNavbar
           room={room.roomName}
           socketId={room.socketId}
           socket={socket}
+          onMenuClick={() => setIsNavbarOpen(false)}
         />
-        <Room socket={socket} room={room} setRoom={setRoom} />
+        <div className="h-full overflow-y-auto">
+          <Room socket={socket} room={room} setRoom={setRoom} />
+        </div>
       </div>
-      <Pane room={room} socket={socket} setRoom={setRoom} setOpen={setIsOpen} isConsumer={setConsumer} isOpen={isOpen} routerId={routerId} setRouterId={setRouterId} />
+      <div className="flex-1 flex flex-col h-full relative">
+
+        <Pane room={room} socket={socket} setRoom={setRoom} setOpen={setIsOpen} isConsumer={setConsumer} isOpen={isOpen} routerId={routerId} setRouterId={setRouterId} isNavbarOpen={isNavbarOpen} setIsNavbarOpen={setIsNavbarOpen} />
+      </div>
+
+
       <Toaster />
     </div>
   );
