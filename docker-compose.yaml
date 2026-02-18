@@ -1,14 +1,16 @@
- services:
+services:
   traefik:
-    image: docker.io/library/traefik:v3.0
+    image: docker.io/library/traefik:latest
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.myresolver.acme.email=your-email@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -16,19 +18,20 @@
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    environment:
+      - DOCKER_API_VERSION=1.44
 
   videochat-app:
     build: .
     environment:
       - NODE_ENV=production
+      - .env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.videochat.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.videochat.rule=Host(`videochat.ddns.net`)"
       - "traefik.http.routers.videochat.entrypoints=websecure"
       - "traefik.http.routers.videochat.tls.certresolver=myresolver"
       - "traefik.http.services.videochat.loadbalancer.server.port=3000"
-    # IMPORTANT: WebRTC Media Ports (UDP)
-    # These usually need to be mapped directly to the host for performance
     ports:
       - "44444:44444/udp"
       - "44444:44444/tcp"

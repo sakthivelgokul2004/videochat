@@ -99,7 +99,11 @@ const Silder = ({
             iceParameters: transportparms.iceParameters,
             iceCandidates: transportparms.iceCandidates,
             dtlsParameters: transportparms.dtlsParameters,
-            sctpParameters: transportparms.sctpParameters
+            sctpParameters: transportparms.sctpParameters,
+            iceServers: [
+              {
+                urls: 'stun:stun.l.google.com:19302'
+              },]
           })
           console.log("create send transport");
           transport.on("connect", ({ dtlsParameters }, callback, errback) => {
