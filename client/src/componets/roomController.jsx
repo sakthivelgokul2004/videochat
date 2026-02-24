@@ -21,7 +21,7 @@ export default function Room(props) {
   }
   return (
     <div className="">
-      <div className="w-full h-screen justify-center">
+      <div className="w-full h-dvh justify-center">
         <label
           htmlFor="my-drawer"
           aria-label="close sidebar"
