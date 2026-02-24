@@ -33,5 +33,5 @@ services:
       - "traefik.http.routers.videochat.tls.certresolver=myresolver"
       - "traefik.http.services.videochat.loadbalancer.server.port=3000"
     ports:
-      - "44444:44444/udp"
-      - "44444:44444/tcp"
+      - "4444:4444/udp"
+      - "4444:4444/tcp"
