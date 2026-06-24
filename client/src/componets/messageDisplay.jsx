@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { HandleMessage } from "./Messages/handleMessage";
 import { Messages } from "./Messages/Messages";
+import { UserIcon } from "./userIcon";
+import { useNavigate } from "react-router-dom";
 
 export default function Message(props) {
   const [publicMessages, setPublicMessage] = useState([]);
   const [privateMessages, setPrivateMessage] = useState([]);
   const { socket, room, width, setOpen, isConsumer, setIsNavbarOpen } = props;
+  const navigate = useNavigate()
   useEffect(() => {
 
     socket.on("newMesage", (val) => {
@@ -49,6 +52,14 @@ export default function Message(props) {
             </button>
           </div>
         }
+
+        <div className="flex-none px-4">
+          <button
+            className="btn btn-active btn-primary"
+            onClick={() => navigate(`/meet/`, )}
+          >Create a Meet</button>
+        </div>
+        <UserIcon />
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
         <Messages

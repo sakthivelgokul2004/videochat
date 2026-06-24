@@ -58,7 +58,7 @@ export default function Dashboard() {
           </div>
         </div>
       ),
-      { duration: Infinity } // stays until user acts
+      { duration: Infinity } 
     );
   };
   return (

@@ -9,7 +9,6 @@ import {
 * @returns {[Device | undefined, boolean, Error | undefined]}
 */
 export const useDevice = () => {
-  /** @type {[boolean, Function]} */
   const [loading, setloading] = useState(true)
   /** @type {[Device|undefined, Function]} */
   const [device, setDevice] = useState()

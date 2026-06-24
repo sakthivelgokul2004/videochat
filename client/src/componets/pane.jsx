@@ -93,7 +93,9 @@ const Pane = ({
           <Silder
             isConsumer={isConsumer}
             width="100%"
-            MessageSocket={socket}
+            sendInvite={(roomId) => {
+              socket.emit("sendInvite", { to: room.socketId, routerId: roomId });
+            }}
             room={room}
             routerId={routerId}
             setRouterId={setRouterId}

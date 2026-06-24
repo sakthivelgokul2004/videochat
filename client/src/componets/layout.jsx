@@ -1,57 +1,145 @@
-import { useEffect, useRef } from "react";
+import PeerCard from "./peerCard";
+import Carousel from "./carousel";
+import useWindowSize from "../hooks/useWindowSize";
 
-const ActiveConnections = ({ streams }) => {
-  const videoRefs = useRef([]);
-
-  //console.log("ActiveConnections streams", streams);
-  useEffect(() => {
-    // Trim or expand videoRefs to match streams
-    videoRefs.current = videoRefs.current.slice(0, streams.length);
-
-    streams.forEach((stream, index) => {
-      const videoEl = videoRefs.current[index];
-      if (videoEl && stream) {
-        try {
-          videoEl.srcObject = stream;
-        } catch (err) {
-          console.error("Failed to attach stream", err);
-        }
-      }
-    });
-  }, [streams]);
-
-  const getGridLayout = (count) => {
-    if (count === 1) return "grid-cols-1 max-w-4xl";
-    if (count === 2) return "grid-cols-1 sm:grid-cols-2 max-w-6xl";
-    if (count <= 4) return "grid-cols-2 max-w-6xl";
-    return "grid-cols-2 lg:grid-cols-3 max-w-7xl";
+const ActiveConnections = ({ peers, localStream, localUserData }) => {
+  console.log(peers);
+  const remotePeers = Array.from(peers.values());
+  console.log("arrayof", remotePeers);
+  const width = useWindowSize();
+  const getItemsPerSlide = () => {
+    if (width < 768) return 3;   // Mobile
+    if (width < 1024) return 6;  // Medium/Tablet
+    return 9;                    // Desktop
   };
+  const allPeers = [
+    {
+      socketId: "local",
+      userData: localUserData,
+      stream: localStream,
+      isLocal: true,
+    },
+    ...remotePeers.map((p) => ({ ...p, isLocal: false })),
+  ];
 
+  const itemsPerSlide = getItemsPerSlide();
+
+  const getLayout = () => {
+    const slides = [];
+
+    for (let i = 0; i < allPeers.length; i += itemsPerSlide) {
+      const peersInSlide = allPeers.slice(i, i + itemsPerSlide);
+      console.log("siles",slides);
+      slides.push(
+        <SlideLayout key={`slide-${i}`} peers={peersInSlide} />
+      );
+    }
+    return slides;
+  };
   return (
-    <div className="w-full h-full flex items-center justify-center bg-base-300 p-4 overflow-hidden">
-      <div
-        className={`grid gap-4 w-full h-fit mx-auto ${getGridLayout(streams.length)}`}
-      >
-        {streams.map((_, index) => (
-          <div
-            key={index}
-            className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10"
-          >
-            <video
-              ref={(el) => (videoRefs.current[index] = el)}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover" // Ensures the video fills the 16:9 box
-            />
-            {/* Optional Overlay for name/status */}
-            <div className="absolute bottom-3 left-3 bg-black/50 px-3 py-1 rounded-md text-white text-xs">
-              Participant {index + 1}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      {/*<PeerCard userData={localUserData} stream={localStream} isLocal={true} />*/}
+      <Carousel slides={getLayout()} />
+    </>
   );
 };
 
 export default ActiveConnections;
+const SlideLayout = ({ peers }) => {
+  const count = peers.length;
+
+  const PeerWrapper = ({ peer, className }) => (
+    <div className={`transition-all duration-500 ease-in-out ${className}`}>
+      <PeerCard userData={peer.userData} stream={peer.stream} isLocal={peer.isLocal} />
+    </div>
+  );
+
+  return (
+    <div className="w-full h-full max-h-screen overflow-hidden p-2">
+
+      {/* 1 peer: portrait on mobile, landscape on desktop */}
+      {count === 1 && (
+        <div className="flex items-center justify-center w-full h-full animate-fade-in">
+          <div className="w-full h-full md:h-auto md:max-w-4xl md:aspect-video transition-all duration-500 ease-in-out">
+            <PeerCard {...peers[0]} />
+          </div>
+        </div>
+      )}
+
+      {/* 2 peers: stacked on mobile, side by side on desktop */}
+      {count === 2 && (
+        <div className="flex flex-col md:flex-row gap-2 w-full h-full">
+          {peers.map((peer) => (
+            <PeerWrapper
+              key={peer.socketId}
+              peer={peer}
+              className="w-full flex-1 md:h-full"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 3 peers: mobile = stacked column, desktop = 1 top + 2 bottom */}
+      {count === 3 && (
+        <div className="flex flex-col gap-2 w-full h-full">
+          <div className="w-full flex-1 transition-all duration-500 ease-in-out">
+            <PeerCard
+              userData={peers[0].userData}
+              stream={peers[0].stream}
+              isLocal={peers[0].isLocal}
+            />
+          </div>
+          <div className="flex flex-row gap-2 w-full flex-1">
+            {peers.slice(1).map((peer) => (
+              <PeerWrapper
+                key={peer.socketId}
+                peer={peer}
+                className="flex-1 h-full"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 4 peers: 2x2 on both mobile and desktop */}
+      {count === 4 && (
+        <div className="grid grid-cols-2 gap-2 w-full h-full">
+          {peers.map((peer) => (
+            <PeerWrapper
+              key={peer.socketId}
+              peer={peer}
+              className="h-full"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 5-6 peers: 2 cols on mobile, 3 cols on desktop */}
+      {count >= 5 && count <= 6 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 w-full h-full">
+          {peers.map((peer) => (
+            <PeerWrapper
+              key={peer.socketId}
+              peer={peer}
+              className="aspect-video w-full"
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 7-9 peers: 3 cols on both, tighter on mobile */}
+      {count >= 7 && (
+        <div className="grid grid-cols-3 gap-1 md:gap-2 w-full h-full">
+          {peers.map((peer) => (
+            <PeerWrapper
+              key={peer.socketId}
+              peer={peer}
+              className="aspect-video w-full"
+            />
+          ))}
+        </div>
+      )}
+
+    </div>
+  );
+};

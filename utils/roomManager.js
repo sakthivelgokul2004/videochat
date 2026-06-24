@@ -36,6 +36,9 @@ export async function createRoom(roomId, worker) {
 export function getRoom(roomId) {
   return rooms.get(roomId);
 }
+export function roomExist(roomId) {
+  return rooms.has(roomId);
+}
 
 export function deleteRoom(roomId) {
   const room = rooms.get(roomId);

@@ -21,23 +21,20 @@ export function UserProvider({ children }) {
         const res = await fetch("/api/auth/user", {
           method: 'GET',
         })
-        if (res.ok) {
         const data = await res.json()
-        console.log("User:", data)
-        console.log("User:", data.userName)
-        setUser((prvies) => ({ displayName: data.userName, email: data.email, photoURL: data.photoUrl }))
-        setAuth(true);
-        }
-        else{
-          console.log("Not Authenticated")
+        if (data.error || data.auth == false) {
+          setLoading(false);
           setAuth(false);
-          setUser({ displayName: "", email: "", photoURL: "" });
+          return;
         }
+        console.log("User:", data)
+        console.log("User:", data)
+        setUser((prvies) => (data.user))
         setLoading(false);
+        setAuth(true);
       } catch (error) {
         setLoading(false);
         setAuth(false);
-        console.log(error)
       }
     }
     auth()

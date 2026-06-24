@@ -3,13 +3,15 @@ import { useAuthContex } from "../contex/userContex";
 
 const ProtectedRoute = () => {
   const [auth, setAuth, loading] = useAuthContex();
+  const isPublicRoute = location.pathname.startsWith("/meet");
 
+  if (isPublicRoute) {
+    return <Outlet />;
+  }
   if (loading) {
-    return <h1>loading</h1>; 
+    return <h1>loading</h1>;
   }
 
-  // If authenticated, render the children (Outlet)
-  // If not, send them back to /home
   return auth ? <Outlet /> : <Navigate to="/home" replace />;
 };
 

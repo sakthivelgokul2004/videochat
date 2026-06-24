@@ -1,6 +1,18 @@
+import { useNavigate } from "react-router-dom";
 import CustomSigninGoogle from "../componets/customSigninGoogle.jsx"
 import Navbar from "../componets/navbar.jsx";
+import { useAuthContex } from "../contex/userContex.jsx";
+import { useEffect } from "react";
 export default function Home(props) {
+
+  const [auth, setAuth, loading] = useAuthContex();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && auth == true) {
+      navigate(`/dashboard/`, { replace: true });
+    }
+  }, [auth, loading]);
   return (
     <div className="h-screen overflow-hidden ">
       <Navbar />

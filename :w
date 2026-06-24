@@ -1,0 +1,128 @@
+import React, { useState } from 'react';
+import {
+  MicrophoneIcon,
+  VideoCameraIcon,
+  VideoCameraSlashIcon,
+  PhoneXMarkIcon,
+} from "@heroicons/react/24/solid";
+import { MicrophoneIcon as MicrophoneOffIcon } from "@heroicons/react/24/outline";
+
+const ControlButton = ({ onClick, active, danger, label, children }) => (
+  <button
+    onClick={onClick}
+    className={`
+      flex flex-col items-center justify-center gap-1
+      w-16 h-16 md:w-14 md:h-14 rounded-2xl
+      transition-all duration-200 ease-in-out
+      active:scale-90 select-none
+      border border-white/10 shadow-lg
+      ${danger
+        ? "bg-red-500 hover:bg-red-600 active:bg-red-700"
+        : active
+          ? "bg-[#3c4043] hover:bg-[#4c5054]"
+          : "bg-red-500/90 hover:bg-red-600"
+      }
+    `}
+  >
+    <span className="text-white">{children}</span>
+    <span className="text-[10px] text-white/80 font-medium leading-none hidden md:block">
+      {label}
+    </span>
+  </button>
+);
+
+const MediaControlPanel = ({ mediaConstraints, toggleMediaConstraint, onLeave }) => {
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+
+  const handleLeave = () => {
+    if (showLeaveConfirm) {
+      onLeave?.();
+    } else {
+      setShowLeaveConfirm(true);
+      setTimeout(() => setShowLeaveConfirm(false), 3000);
+    }
+  };
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+      {/* Gradient backdrop */}
+      <div className="bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-8 pb-6 px-4 pointer-events-auto">
+        
+        {/* Leave confirm toast */}
+        {showLeaveConfirm && (
+          <div className="flex justify-center mb-3 animate-fade-in">
+            <div className="bg-red-600/90 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-full shadow-lg">
+              Tap again to leave the call
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-center gap-4 md:gap-6">
+
+          {/* MIC */}
+          <ControlButton
+            onClick={() => toggleMediaConstraint("audio")}
+            active={mediaConstraints.audio}
+            label={mediaConstraints.audio ? "Mute" : "Unmute"}
+          >
+            {mediaConstraints.audio
+              ? <MicrophoneIcon className="w-6 h-6" />
+              : <MicrophoneOffIcon className="w-6 h-6" />
+            }
+          </ControlButton>
+
+          {/* CAMERA */}
+          <ControlButton
+            onClick={() => toggleMediaConstraint("video")}
+            active={mediaConstraints.video}
+            label={mediaConstraints.video ? "Stop" : "Start"}
+          >
+            {mediaConstraints.video
+              ? <VideoCameraIcon className="w-6 h-6" />
+              : <VideoCameraSlashIcon className="w-6 h-6" />
+            }
+          </ControlButton>
+
+          {/* END CALL — wider pill shape */}
+          <button
+            onClick={handleLeave}
+            className={`
+              flex flex-col items-center justify-center gap-1
+              w-20 h-16 md:w-20 md:h-14 rounded-2xl
+              transition-all duration-200 ease-in-out
+              active:scale-90 select-none shadow-lg
+              border border-white/10
+              ${showLeaveConfirm
+                ? "bg-red-700 scale-105 ring-2 ring-red-400"
+                : "bg-red-500 hover:bg-red-600"
+              }
+            `}
+          >
+            <PhoneXMarkIcon className="w-6 h-6 text-white" />
+            <span className="text-[10px] text-white/80 font-medium leading-none hidden md:block">
+              Leave
+            </span>
+          </button>
+
+        </div>
+
+        {/* Status indicators */}
+        <div className="flex justify-center gap-3 mt-3">
+          {!mediaConstraints.audio && (
+            <span className="text-xs text-red-400 flex items-center gap-1">
+              <MicrophoneOffIcon className="w-3 h-3" /> Muted
+            </span>
+          )}
+          {!mediaConstraints.video && (
+            <span className="text-xs text-red-400 flex items-center gap-1">
+              <VideoCameraSlashIcon className="w-3 h-3" /> Camera off
+            </span>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default MediaControlPanel;

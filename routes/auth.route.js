@@ -7,54 +7,61 @@ let router = Express.Router();
 const client = new OAuth2Client(process.env.Client_ID);
 router.post("/addUser", addUser);
 router.get("/user", async (req, res) => {
-  let body = req.cookies
-  if (body.access_token) {
-    try {
-      const info = await client.getTokenInfo(body.access_token)
-      //console.log(info.email)
-      if (info.email) {
-        let doc = await User.findOne({ email: info.email });
-        res.send(doc);
+  let { access_token, refresh_token } = req.cookies;
+  if (!access_token && !refresh_token) {
+    res.status(200).json({ auth: false, user: null });
+    return;
+  }
+
+
+  try {
+    const info = await client.getTokenInfo(access_token)
+    let doc = await User.findOne({ email: info.email });
+    return res.status(200).json({
+      auth: true, user: {
+        displayName: doc.userName,
+        email: doc.email,
+        photoURL: doc.photoUrl
       }
-      else if (body) {
-        console.log("had refresh token")
-        const token = await refreshAccessToken(body.refresh_token);
+    });
+  } catch (error) {
+    try {
+      if (refresh_token) {
+        const token = await refreshAccessToken(refresh_token);
         res.cookie('access_token', token.access_token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
           maxAge: 60 * 60 * 1000,
         });
+        const info = await client.getTokenInfo(token.access_token);
+        const doc = await User.findOne({ email: info.email });
+        return res.status(200).json({
+          auth: true, user: {
+            displayName: doc.userName,
+            email: doc.email,
+            photoURL: doc.photoUrl
+          }
+        });
       }
-      else {
-        console.log("had nothing")
-        res.status(400).send("not authzed");
-        res.redirect("/home")
-      }
-    } catch (error) {
-      console.log(error)
-      return res.status(400).send('Authorization code not found.');
     }
-
+    catch {
+      return res.status(200).send({ error: "Session expired. Please login again." });
+    }
   }
-  else {
-    console.log("had nothing")
-    res.status(400).send("not authzed");
-  }
+  return res.status(401).send("Invalid session");
 }
 )
-router.get('/callback', async (req, res) => {
-const codeParam = req.query.code;
-  const redirectUri = process.env.NODE_ENV === 'production' ? `https://${req.get("host")}/api/auth/callback` : `http://${req.get("host")}/api/auth/callback`;
-  //console.log(redirectUri);
 
-  //  const redirectUri = `${req.protocol}://${req.get("host")}/api/auth/callback`;
+router.get('/callback', async (req, res) => {
+  const codeParam = req.query.code;
+  const redirectUri = process.env.NODE_ENV === 'production' ? `https://${req.get("host")}/api/auth/callback` : `http://${req.get("host")}/api/auth/callback`;
   if (!process.env.Client_ID || !process.env.Client_SECRET) {
     throw new Error('Google OAuth env variables missing');
   }
 
   if (typeof codeParam !== 'string') {
-    return res.status(400).send('Authorization code not found.');
+    return res.status(401).send('Authorization code not found.');
   }
   try {
     const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -71,7 +78,6 @@ const codeParam = req.query.code;
       }),
     });
     const tokens = await response.json();
-    //console.log('Tokens received:', tokens);
     res.cookie('access_token', tokens.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -107,4 +113,25 @@ const codeParam = req.query.code;
     res.status(500).send('Authentication failed.');
   }
 });
+router.post("/signout", async (req, res) => {
+  let { access_token, refresh_token } = req.cookies;
+  await client.revokeToken(refresh_token);
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  res.clearCookie("refresh_token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Successfully signed out"
+  });
+});
+
 export default router;

@@ -6,6 +6,10 @@ export default {
       white: "#ffffff",
       black: "#000000",
 
+      meet: {
+        dark: '#202124',
+        grey: '#3c4043',
+      },
       red: {
         50: "#fef2f2",
         100: "#fee2e2",
@@ -18,6 +22,34 @@ export default {
         800: "#991b1b",
         900: "#7f1d1d",
       },
+      'comet': {
+        '50': '#f5f6f9',
+        '100': '#e8ebf1',
+        '200': '#d6dbe7',
+        '300': '#bac3d6',
+        '400': '#98a4c2',
+        '500': '#7f8ab2',
+        '600': '#6d75a3',
+        '700': '#616694',
+        '800': '#54577c',
+        '900': '#454863',
+        '950': '#2d2e3e',
+      },
+      'charade': {
+        '50': '#f6f6f9',
+        '100': '#ecedf2',
+        '200': '#d5d7e2',
+        '300': '#b0b3c9',
+        '400': '#8589ab',
+        '500': '#666b91',
+        '600': '#515578',
+        '700': '#424562',
+        '800': '#3a3c52',
+        '900': '#2d2e3e',
+        '950': '#22232f',
+      },
+
+
 
       green: {
         50: "#f0fdf4",
@@ -59,7 +91,17 @@ export default {
         950: "#262c40",
       },
     },
-    extend: {},
+    extend: {
+      animation: {
+        'fade-in': 'fadeIn 0.4s ease-in-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'scale(0.97)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
+    },
   },
   plugins: [require("daisyui")],
 };

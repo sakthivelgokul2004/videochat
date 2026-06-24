@@ -7,6 +7,7 @@ import Dashboard from "./componets/dashboard";
 import Loading from "./pages/loading";
 import { lazy, Suspense } from "react";
 import { useEffect } from "react";
+import Meet from "./pages/Meet";
 function App() {
   const [auth, setAuth, loading] = useAuthContex();
   if (loading) {
@@ -19,8 +20,9 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/home" element={<Home setAuth={setAuth} />} />
+            <Route path="/meet/:roomid" element={<Meet/>} />
+            <Route path="/meet" element={<Meet/>} />
             <Route element={<ProtectedRoute />}>
-              {/* Everything inside here requires auth */}
               <Route path="/" element={<Navigate to="/dashboard" />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="*" element={<Navigate to="/" />} />

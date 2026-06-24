@@ -22,6 +22,8 @@ export class PeerStore {
 
     /** @type {Map<string, Map<string, Map<string, Consumer>>>} */
     this.consumers = new Map();
+    /** @type {Map<string, Map<string, object>>} */
+    this.userMetadata = new Map();
   }
 
   /**
@@ -97,6 +99,16 @@ export class PeerStore {
     socketMap.get(socketId).set(consumerId, consumer);
   }
 
+  setUserMetadata(roomId, socketId, metadata) {
+    this.#ensure(this.userMetadata, roomId);
+    this.userMetadata.get(roomId).set(socketId, metadata);
+  }
+  updateUserMetadata(roomId, socketId, update) {
+    const current = this.userMetadata.get(roomId)?.get(socketId);
+    if (current) {
+      this.userMetadata.get(roomId).set(socketId, { ...current, ...update });
+    }
+  }
   // ================================
   // GETTERS
   // ================================
@@ -176,6 +188,27 @@ export class PeerStore {
     return result;
   }
 
+  getProducersBySocket(roomId, socketId) {
+    const producerMap = this.producers.get(roomId)?.get(socketId);
+    if (!producerMap) return [];
+    return Array.from(producerMap.values());
+  }
+  getPeerSnapshot(roomId) {
+    const roomUsers = this.userMetadata.get(roomId);
+    if (!roomUsers) return [];
+
+    const snapshot = [];
+    for (const [socketId, data] of roomUsers.entries()) {
+      snapshot.push({
+        id: socketId,
+        ...data
+      });
+    }
+    return snapshot;
+  }
+  getMetadata(roomId, socketId) {
+    return this.userMetadata.get(roomId)?.get(socketId);
+  }
   // ================================
   // DELETERS
   // ================================
@@ -190,6 +223,7 @@ export class PeerStore {
     this.recvTransports.get(roomId)?.delete(socketId);
     this.producers.get(roomId)?.delete(socketId);
     this.consumers.get(roomId)?.delete(socketId);
+    this.userMetadata.get(roomId)?.delete(socketId);
   }
 
   /**
