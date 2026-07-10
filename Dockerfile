@@ -1,6 +1,6 @@
 
  # Stage 1: Build the Frontend
-FROM docker.io/library/node:20-slim AS build-stage
+FROM docker.io/library/node:22-slim AS build-stage
 WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm install
@@ -8,9 +8,9 @@ COPY client/ ./
 RUN npm run build
 
 # Stage 2: Setup the Backend
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 WORKDIR /app
-RUN apt-get update && apt-get install -y python3 build-essential
+RUN apt-get update && apt-get install -y python3 build-essential python3-pip
 COPY package*.json ./
 RUN npm install --production
 COPY . .
