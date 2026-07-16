@@ -41,7 +41,7 @@ const PeerCard = ({ userData, stream, isLocal = false }) => {
       )}
 
       {/* 3. Overlay UI */}
-      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white drop-shadow-lg bg-gradient-to-t from-black/50 to-transparent p-2 rounded-b-lg">
+      <div className="absolute bottom-0  w-full flex items-center justify-between text-white bg-meet-dark p-2 border-t-2  border-t-border  rounded-t-sm">
         <span className="text-sm font-semibold truncate px-1">{userName}</span>
         {isAudioMuted && (
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500/80 backdrop-blur-sm">

@@ -15,7 +15,17 @@ export default function Home(props) {
   }, [auth, loading]);
   return (
     <div className="h-screen overflow-hidden ">
-      <Navbar />
+      <div className="navbar bg-base-300 h-16 md:h-20 border-border border-b-2">
+        <div className="flex-1">
+          <a className="btn btn-ghost text-xl">VideoChat</a>
+        </div>
+        <div className="flex-none px-4">
+          <button
+            className="btn btn-active my-3 btn-primary text-lg"
+            onClick={() => navigate(`/meet/`,)}
+          >Create a Meet</button>
+        </div>
+      </div>
       <div className="hero h-full  bg-base-200 ">
         <div className="hero-content text-center">
           <div className="max-w-lg">

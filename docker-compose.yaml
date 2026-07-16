@@ -1,6 +1,7 @@
 services:
   traefik:
     image: docker.io/library/traefik:latest
+    restart: always
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -23,6 +24,8 @@ services:
 
   videochat-app:
     build: .
+    restart: always 
+    network_mode: host
     environment:
       - NODE_ENV=production
       - .env

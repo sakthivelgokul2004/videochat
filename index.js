@@ -28,13 +28,13 @@ let worker = createWorker();
         {
           protocol: "udp",
           ip: ip, // Listen on all available network interfaces
-          announcedAddress: process.env.PUBLIC_IP || "127.0.0.1", // IMPORTANT: Use your Public IP here
+          announcedAddress: process.env.ANNOUNCED_IP|| "127.0.0.1", 
           port: 4444, // The single port for all traffic
         },
         {
           protocol: "tcp",
           ip: ip, // Listen on all available network interfaces
-          announcedAddress: process.env.PUBLIC_IP || "127.0.0.1",
+          announcedAddress: process.env.ANNOUNCED_IP|| "127.0.0.1",
           port: 4444,
         },
       ],
